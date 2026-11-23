@@ -25,7 +25,7 @@
       background: #0d0d12;
       border: 1px solid #27272a;
       border-bottom: none;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       letter-spacing: 1px;
     }
     .danger { color: #ef4444; font-weight: bold; }
@@ -63,7 +63,7 @@
       text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
     }
     #overlay p {
-      max-width: 520px;
+      max-width: 540px;
       line-height: 1.6;
       color: #a1a1aa;
       margin-bottom: 24px;
@@ -98,6 +98,7 @@
   <div id="hud">
     <div>KEYS: <span id="keys-ui" class="warn">0 / 3</span></div>
     <div>BATTERY: <span id="bat-ui" class="good">100%</span></div>
+    <div>STAMINA: <span id="stam-ui" class="good">100%</span></div>
     <div>STATUS: <span id="status-ui">QUIET</span></div>
   </div>
 
@@ -106,14 +107,14 @@
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT</h1>
       <p id="ov-desc">
-        You are locked inside Sector 4. Collect all <b>3 Security Keys</b> and reach the <b>Exit Door</b>.<br><br>
-        It hunts by sight and light. Turn off your flashlight (<b>F</b>) to hide when it gets close.
+        Collect all <b>3 Security Keys</b> and reach the <b>EXIT</b>.<br><br>
+        When it spots you, it <b>sprints right behind you</b>. Hold <b>SHIFT</b> to run, break line-of-sight around corners, and toggle <b>F</b> to hide in the dark.
       </p>
       <button id="start-btn">ENTER THE DARK</button>
     </div>
   </div>
 
-  <div id="controls">MOVE: WASD / Arrows &nbsp;|&nbsp; AIM: Mouse &nbsp;|&nbsp; FLASHLIGHT: F or Left Click</div>
+  <div id="controls">MOVE: WASD / Arrows &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; AIM: Mouse &nbsp;|&nbsp; FLASHLIGHT: F or Click</div>
 
   <script>
     const canvas = document.getElementById("game");
@@ -125,9 +126,9 @@
 
     const keysUi = document.getElementById("keys-ui");
     const batUi = document.getElementById("bat-ui");
+    const stamUi = document.getElementById("stam-ui");
     const statusUi = document.getElementById("status-ui");
 
-    // --- Procedural Web Audio (No external files needed) ---
     let audioCtx;
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -147,12 +148,17 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
+    function playSpotCue() {
+      if (!audioCtx) return;
+      playTone(190, "sawtooth", 0.22, 0.22);
+      setTimeout(() => playTone(280, "sawtooth", 0.28, 0.2), 90);
+    }
+
     function playScare() {
       if (!audioCtx) return;
       [55, 62, 110, 146].forEach(f => playTone(f, "sawtooth", 0.9, 0.25));
     }
 
-    // --- Map Layout (16 x 11 tiles, 50px each) ---
     const TILE = 50;
     const MAP = [
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
@@ -166,7 +172,7 @@
       [1,0,1,1,1,0,1,1,1,0,1,1,0,1,0,1],
       [1,0,0,0,0,0,1,0,0,0,0,0,0,0,2,1],
       [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
-    ]; // 1 = Wall, 0 = Floor, 2 = Exit Door
+    ];
 
     let running = false;
     let keysDown = {};
@@ -176,18 +182,20 @@
     function resetGame() {
       player = {
         x: 75, y: 75, r: 12,
-        speed: 2.3,
+        walkSpeed: 2.35,
+        sprintSpeed: 3.75,
+        stamina: 100,
         angle: 0,
         flashlight: true,
         battery: 100
       };
       monster = {
         x: 675, y: 425, r: 15,
-        speed: 1.45,
-        chaseSpeed: 2.55,
+        patrolSpeed: 1.5,
+        chaseSpeed: 3.15,
         chasing: false,
-        waypoint: { x: 525, y: 275 },
-        visibleTimer: 0
+        memoryTimer: 0,
+        waypoint: { x: 525, y: 275 }
       };
       items = [
         { x: 275, y: 75, type: "key", taken: false },
@@ -208,6 +216,10 @@
       const b = Math.ceil(player.battery);
       batUi.textContent = `${b}%`;
       batUi.className = b > 40 ? "good" : b > 15 ? "warn" : "danger";
+
+      const s = Math.ceil(player.stamina);
+      stamUi.textContent = `${s}%`;
+      stamUi.className = s > 40 ? "good" : s > 15 ? "warn" : "danger";
     }
 
     function isWall(px, py) {
@@ -224,7 +236,7 @@
 
     function hasLineOfSight(x1, y1, x2, y2) {
       const dist = Math.hypot(x2 - x1, y2 - y1);
-      const steps = Math.floor(dist / 12);
+      const steps = Math.floor(dist / 10);
       for (let i = 1; i < steps; i++) {
         const t = i / steps;
         if (isWall(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false;
@@ -243,12 +255,12 @@
       if (won) {
         ovTitle.textContent = "YOU ESCAPED";
         ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You unlocked Sector 4 and slipped back into the light.<br><br>Want to try again?";
+        ovDesc.innerHTML = "You outran the dark and escaped Sector 4.<br><br>Play again?";
       } else {
         playScare();
-        ovTitle.textContent = "IT FOUND YOU";
+        ovTitle.textContent = "IT CAUGHT YOU";
         ovTitle.style.color = "#ef4444";
-        ovDesc.innerHTML = "Your flashlight flickered out in the dark.<br><br>Tip: Turn off your light (<b>F</b>) when the heartbeat speeds up.";
+        ovDesc.innerHTML = "It sprinted right behind you.<br><br>Tip: Sprint around sharp corners and click <b>F</b> to drop off its radar.";
       }
       startBtn.textContent = "PLAY AGAIN";
     }
@@ -256,16 +268,27 @@
     function update(dt) {
       if (!running) return;
 
-      // Player Movement
+      // Player Movement & Sprint
       let mx = 0, my = 0;
       if (keysDown["w"] || keysDown["arrowup"]) my -= 1;
       if (keysDown["s"] || keysDown["arrowdown"]) my += 1;
       if (keysDown["a"] || keysDown["arrowleft"]) mx -= 1;
       if (keysDown["d"] || keysDown["arrowright"]) mx += 1;
 
-      if (mx !== 0 || my !== 0) {
+      const moving = mx !== 0 || my !== 0;
+      const wantsSprint = (keysDown["shift"] || keysDown["shiftleft"] || keysDown["shiftright"]) && moving && player.stamina > 2;
+
+      if (wantsSprint) {
+        player.stamina = Math.max(0, player.stamina - dt * 34);
+      } else {
+        player.stamina = Math.min(100, player.stamina + dt * (moving ? 14 : 24));
+      }
+
+      const pSpeed = wantsSprint ? player.sprintSpeed : player.walkSpeed;
+
+      if (moving) {
         const len = Math.hypot(mx, my);
-        moveEntity(player, (mx / len) * player.speed, (my / len) * player.speed);
+        moveEntity(player, (mx / len) * pSpeed, (my / len) * pSpeed);
       }
 
       player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
@@ -303,17 +326,24 @@
         }
       }
 
-      // Monster Detection & AI
+      // Monster Chase & Pursuit AI
       const distToPlayer = Math.hypot(player.x - monster.x, player.y - monster.y);
       const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
-      const detectRange = player.flashlight ? 270 : 95;
+      const detectRange = player.flashlight ? 300 : (wantsSprint ? 165 : 105);
 
       if (los && distToPlayer < detectRange) {
+        if (!monster.chasing) playSpotCue();
         monster.chasing = true;
+        monster.memoryTimer = 2.6; // Keeps chasing your last position for 2.6s if you break LOS
         monster.waypoint = { x: player.x, y: player.y };
-      } else if (Math.hypot(monster.waypoint.x - monster.x, monster.waypoint.y - monster.y) < 20) {
-        monster.chasing = false;
-        // Pick random open floor tile to patrol
+      } else if (monster.chasing) {
+        monster.memoryTimer -= dt;
+        if (monster.memoryTimer <= 0) {
+          monster.chasing = false;
+        }
+      }
+
+      if (!monster.chasing && Math.hypot(monster.waypoint.x - monster.x, monster.waypoint.y - monster.y) < 22) {
         let rx, ry;
         do {
           rx = Math.floor(Math.random() * 14 + 1) * TILE + 25;
@@ -322,19 +352,20 @@
         monster.waypoint = { x: rx, y: ry };
       }
 
-      const spd = monster.chasing ? monster.chaseSpeed : monster.speed;
+      const spd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
       const ang = Math.atan2(monster.waypoint.y - monster.y, monster.waypoint.x - monster.x);
       moveEntity(monster, Math.cos(ang) * spd, Math.sin(ang) * spd);
 
       // Proximity Heartbeat & Status
-      if (distToPlayer < 240) {
-        shake = Math.max(0, (240 - distToPlayer) / 45);
-        heartbeatTimer -= dt * (monster.chasing ? 3.2 : 1.8);
+      if (distToPlayer < 260 || monster.chasing) {
+        const proximity = Math.max(0, (260 - distToPlayer) / 40);
+        shake = monster.chasing ? Math.max(2.5, proximity) : proximity * 0.7;
+        heartbeatTimer -= dt * (monster.chasing ? 3.8 : 2.0);
         if (heartbeatTimer <= 0) {
           playTone(65, "sine", 0.14, 0.25);
           heartbeatTimer = 1;
         }
-        statusUi.textContent = monster.chasing ? "IT SEES YOU!" : "HEARTBEAT...";
+        statusUi.textContent = monster.chasing ? "RUNNING BEHIND YOU!" : "NEARBY...";
         statusUi.className = "danger";
       } else {
         shake = 0;
@@ -344,7 +375,6 @@
         }
       }
 
-      // Caught Check
       if (distToPlayer < player.r + monster.r - 2) {
         endGame(false);
         return;
@@ -362,7 +392,6 @@
       ctx.fillStyle = "#09090b";
       ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-      // Draw Map
       for (let r = 0; r < MAP.length; r++) {
         for (let c = 0; c < MAP[0].length; c++) {
           const x = c * TILE, y = r * TILE;
@@ -381,7 +410,6 @@
         }
       }
 
-      // Draw Items
       items.forEach(it => {
         if (it.taken) return;
         ctx.beginPath();
@@ -390,23 +418,22 @@
         ctx.fill();
       });
 
-      // Draw Monster
+      // Monster
       ctx.beginPath();
       ctx.arc(monster.x, monster.y, monster.r, 0, Math.PI * 2);
-      ctx.fillStyle = "#991b1b";
+      ctx.fillStyle = monster.chasing ? "#dc2626" : "#7f1d1d";
       ctx.fill();
-      // Glowing eyes
-      ctx.fillStyle = "#fef08a";
+      ctx.fillStyle = monster.chasing ? "#ffffff" : "#fef08a";
       ctx.fillRect(monster.x - 5, monster.y - 4, 3, 3);
       ctx.fillRect(monster.x + 2, monster.y - 4, 3, 3);
 
-      // Draw Player
+      // Player
       ctx.beginPath();
       ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
       ctx.fillStyle = "#e4e4e7";
       ctx.fill();
 
-      // --- Darkness & Flashlight Mask ---
+      // Darkness & Flashlight Mask
       const darkCanvas = document.createElement("canvas");
       darkCanvas.width = canvas.width;
       darkCanvas.height = canvas.height;
@@ -414,10 +441,8 @@
 
       dCtx.fillStyle = "rgba(0, 0, 0, 0.97)";
       dCtx.fillRect(0, 0, canvas.width, canvas.height);
-
       dCtx.globalCompositeOperation = "destination-out";
 
-      // Dim ambient radius around player
       const amb = dCtx.createRadialGradient(player.x, player.y, 8, player.x, player.y, 48);
       amb.addColorStop(0, "rgba(0,0,0,1)");
       amb.addColorStop(1, "rgba(0,0,0,0)");
@@ -426,7 +451,6 @@
       dCtx.arc(player.x, player.y, 48, 0, Math.PI * 2);
       dCtx.fill();
 
-      // Flashlight Cone
       if (player.flashlight && player.battery > 0) {
         const flicker = player.battery < 18 && Math.random() < 0.25 ? 0.35 : 1;
         const reach = 270 * flicker;
@@ -458,7 +482,6 @@
       requestAnimationFrame(loop);
     }
 
-    // Input Listeners
     window.addEventListener("keydown", e => {
       const k = e.key.toLowerCase();
       keysDown[k] = true;
