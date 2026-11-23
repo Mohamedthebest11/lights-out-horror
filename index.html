@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LIGHTS OUT // Sector 4</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: #050507;
+      color: #d4d4d8;
+      font-family: 'Courier New', Courier, monospace;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+    #hud {
+      width: 800px;
+      display: flex;
+      justify-content: space-between;
+      padding: 10px 16px;
+      background: #0d0d12;
+      border: 1px solid #27272a;
+      border-bottom: none;
+      font-size: 0.95rem;
+      letter-spacing: 1px;
+    }
+    .danger { color: #ef4444; font-weight: bold; }
+    .good { color: #22c55e; }
+    .warn { color: #eab308; }
+    #game-wrap {
+      position: relative;
+      width: 800px;
+      height: 540px;
+      border: 1px solid #27272a;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
+    }
+    canvas {
+      display: block;
+      background: #09090b;
+      cursor: crosshair;
+    }
+    #overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(5, 5, 7, 0.92);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 32px;
+      z-index: 10;
+    }
+    #overlay h1 {
+      font-size: 2.6rem;
+      color: #ef4444;
+      letter-spacing: 6px;
+      margin-bottom: 12px;
+      text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+    }
+    #overlay p {
+      max-width: 520px;
+      line-height: 1.6;
+      color: #a1a1aa;
+      margin-bottom: 24px;
+      font-size: 0.95rem;
+    }
+    button {
+      background: #18181b;
+      color: #f4f4f5;
+      border: 1px solid #ef4444;
+      padding: 12px 28px;
+      font-family: inherit;
+      font-size: 1rem;
+      letter-spacing: 2px;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+    button:hover {
+      background: #ef4444;
+      color: #050507;
+      font-weight: bold;
+    }
+    #controls {
+      width: 800px;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 0.8rem;
+      color: #71717a;
+    }
+  </style>
+</head>
+<body>
+  <div id="hud">
+    <div>KEYS: <span id="keys-ui" class="warn">0 / 3</span></div>
+    <div>BATTERY: <span id="bat-ui" class="good">100%</span></div>
+    <div>STATUS: <span id="status-ui">QUIET</span></div>
+  </div>
+
+  <div id="game-wrap">
+    <canvas id="game" width="800" height="540"></canvas>
+    <div id="overlay">
+      <h1 id="ov-title">LIGHTS OUT</h1>
+      <p id="ov-desc">
+        You are locked inside Sector 4. Collect all <b>3 Security Keys</b> and reach the <b>Exit Door</b>.<br><br>
+        It hunts by sight and light. Turn off your flashlight (<b>F</b>) to hide when it gets close.
+      </p>
+      <button id="start-btn">ENTER THE DARK</button>
+    </div>
+  </div>
+
+  <div id="controls">MOVE: WASD / Arrows &nbsp;|&nbsp; AIM: Mouse &nbsp;|&nbsp; FLASHLIGHT: F or Left Click</div>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    const overlay = document.getElementById("overlay");
+    const ovTitle = document.getElementById("ov-title");
+    const ovDesc = document.getElementById("ov-desc");
+    const startBtn = document.getElementById("start-btn");
+
+    const keysUi = document.getElementById("keys-ui");
+    const batUi = document.getElementById("bat-ui");
+    const statusUi = document.getElementById("status-ui");
+
+    // --- Procedural Web Audio (No external files needed) ---
+    let audioCtx;
+    function initAudio() {
+      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    function playTone(freq, type, duration, vol = 0.15) {
+      if (!audioCtx) return;
+      const osc = audioCtx.createOscillator();
+      const gain = audioCtx.createGain();
+      osc.type = type;
+      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+      osc.connect(gain);
+      gain.connect(audioCtx.destination);
+      osc.start();
+      osc.stop(audioCtx.currentTime + duration);
+    }
+
+    function playScare() {
+      if (!audioCtx) return;
+      [55, 62, 110, 146].forEach(f => playTone(f, "sawtooth", 0.9, 0.25));
+    }
+
+    // --- Map Layout (16 x 11 tiles, 50px each) ---
+    const TILE = 50;
+    const MAP = [
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+      [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
+      [1,0,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
+      [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
+      [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,1],
+      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+      [1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1],
+      [1,0,0,0,1,0,0,0,0,0,1,0,0,1,0,1],
+      [1,0,1,1,1,0,1,1,1,0,1,1,0,1,0,1],
+      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,2,1],
+      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    ]; // 1 = Wall, 0 = Floor, 2 = Exit Door
+
+    let running = false;
+    let keysDown = {};
+    let mouse = { x: 400, y: 270 };
+    let player, monster, items, keysCollected, heartbeatTimer = 0, shake = 0;
+
+    function resetGame() {
+      player = {
+        x: 75, y: 75, r: 12,
+        speed: 2.3,
+        angle: 0,
+        flashlight: true,
+        battery: 100
+      };
+      monster = {
+        x: 675, y: 425, r: 15,
+        speed: 1.45,
+        chaseSpeed: 2.55,
+        chasing: false,
+        waypoint: { x: 525, y: 275 },
+        visibleTimer: 0
+      };
+      items = [
+        { x: 275, y: 75, type: "key", taken: false },
+        { x: 75, y: 475, type: "key", taken: false },
+        { x: 675, y: 75, type: "key", taken: false },
+        { x: 425, y: 275, type: "battery", taken: false },
+        { x: 275, y: 425, type: "battery", taken: false }
+      ];
+      keysCollected = 0;
+      shake = 0;
+      updateHUD();
+    }
+
+    function updateHUD() {
+      keysUi.textContent = `${keysCollected} / 3`;
+      keysUi.className = keysCollected === 3 ? "good" : "warn";
+
+      const b = Math.ceil(player.battery);
+      batUi.textContent = `${b}%`;
+      batUi.className = b > 40 ? "good" : b > 15 ? "warn" : "danger";
+    }
+
+    function isWall(px, py) {
+      const col = Math.floor(px / TILE);
+      const row = Math.floor(py / TILE);
+      if (row < 0 || row >= MAP.length || col < 0 || col >= MAP[0].length) return true;
+      return MAP[row][col] === 1;
+    }
+
+    function canMove(x, y, r) {
+      return !isWall(x - r, y - r) && !isWall(x + r, y - r) &&
+             !isWall(x - r, y + r) && !isWall(x + r, y + r);
+    }
+
+    function hasLineOfSight(x1, y1, x2, y2) {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      const steps = Math.floor(dist / 12);
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        if (isWall(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false;
+      }
+      return true;
+    }
+
+    function moveEntity(ent, dx, dy) {
+      if (canMove(ent.x + dx, ent.y, ent.r)) ent.x += dx;
+      if (canMove(ent.x, ent.y + dy, ent.r)) ent.y += dy;
+    }
+
+    function endGame(won) {
+      running = false;
+      overlay.style.display = "flex";
+      if (won) {
+        ovTitle.textContent = "YOU ESCAPED";
+        ovTitle.style.color = "#22c55e";
+        ovDesc.innerHTML = "You unlocked Sector 4 and slipped back into the light.<br><br>Want to try again?";
+      } else {
+        playScare();
+        ovTitle.textContent = "IT FOUND YOU";
+        ovTitle.style.color = "#ef4444";
+        ovDesc.innerHTML = "Your flashlight flickered out in the dark.<br><br>Tip: Turn off your light (<b>F</b>) when the heartbeat speeds up.";
+      }
+      startBtn.textContent = "PLAY AGAIN";
+    }
+
+    function update(dt) {
+      if (!running) return;
+
+      // Player Movement
+      let mx = 0, my = 0;
+      if (keysDown["w"] || keysDown["arrowup"]) my -= 1;
+      if (keysDown["s"] || keysDown["arrowdown"]) my += 1;
+      if (keysDown["a"] || keysDown["arrowleft"]) mx -= 1;
+      if (keysDown["d"] || keysDown["arrowright"]) mx += 1;
+
+      if (mx !== 0 || my !== 0) {
+        const len = Math.hypot(mx, my);
+        moveEntity(player, (mx / len) * player.speed, (my / len) * player.speed);
+      }
+
+      player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
+
+      // Battery Drain
+      if (player.flashlight && player.battery > 0) {
+        player.battery = Math.max(0, player.battery - dt * 2.4);
+        if (player.battery === 0) player.flashlight = false;
+      }
+
+      // Items Pickup
+      items.forEach(it => {
+        if (!it.taken && Math.hypot(player.x - it.x, player.y - it.y) < 26) {
+          it.taken = true;
+          if (it.type === "key") {
+            keysCollected++;
+            playTone(620, "sine", 0.25, 0.2);
+          } else {
+            player.battery = Math.min(100, player.battery + 45);
+            playTone(440, "triangle", 0.2, 0.2);
+          }
+        }
+      });
+
+      // Exit Check
+      const col = Math.floor(player.x / TILE);
+      const row = Math.floor(player.y / TILE);
+      if (MAP[row][col] === 2) {
+        if (keysCollected >= 3) {
+          endGame(true);
+          return;
+        } else {
+          statusUi.textContent = "LOCKED (NEED 3 KEYS)";
+          statusUi.className = "warn";
+        }
+      }
+
+      // Monster Detection & AI
+      const distToPlayer = Math.hypot(player.x - monster.x, player.y - monster.y);
+      const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
+      const detectRange = player.flashlight ? 270 : 95;
+
+      if (los && distToPlayer < detectRange) {
+        monster.chasing = true;
+        monster.waypoint = { x: player.x, y: player.y };
+      } else if (Math.hypot(monster.waypoint.x - monster.x, monster.waypoint.y - monster.y) < 20) {
+        monster.chasing = false;
+        // Pick random open floor tile to patrol
+        let rx, ry;
+        do {
+          rx = Math.floor(Math.random() * 14 + 1) * TILE + 25;
+          ry = Math.floor(Math.random() * 9 + 1) * TILE + 25;
+        } while (isWall(rx, ry));
+        monster.waypoint = { x: rx, y: ry };
+      }
+
+      const spd = monster.chasing ? monster.chaseSpeed : monster.speed;
+      const ang = Math.atan2(monster.waypoint.y - monster.y, monster.waypoint.x - monster.x);
+      moveEntity(monster, Math.cos(ang) * spd, Math.sin(ang) * spd);
+
+      // Proximity Heartbeat & Status
+      if (distToPlayer < 240) {
+        shake = Math.max(0, (240 - distToPlayer) / 45);
+        heartbeatTimer -= dt * (monster.chasing ? 3.2 : 1.8);
+        if (heartbeatTimer <= 0) {
+          playTone(65, "sine", 0.14, 0.25);
+          heartbeatTimer = 1;
+        }
+        statusUi.textContent = monster.chasing ? "IT SEES YOU!" : "HEARTBEAT...";
+        statusUi.className = "danger";
+      } else {
+        shake = 0;
+        if (MAP[row][col] !== 2) {
+          statusUi.textContent = "QUIET";
+          statusUi.className = "";
+        }
+      }
+
+      // Caught Check
+      if (distToPlayer < player.r + monster.r - 2) {
+        endGame(false);
+        return;
+      }
+
+      updateHUD();
+    }
+
+    function draw() {
+      ctx.save();
+      if (shake > 0 && running) {
+        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+      }
+
+      ctx.fillStyle = "#09090b";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw Map
+      for (let r = 0; r < MAP.length; r++) {
+        for (let c = 0; c < MAP[0].length; c++) {
+          const x = c * TILE, y = r * TILE;
+          if (MAP[r][c] === 1) {
+            ctx.fillStyle = "#18181b";
+            ctx.fillRect(x, y, TILE, TILE);
+            ctx.strokeStyle = "#27272a";
+            ctx.strokeRect(x, y, TILE, TILE);
+          } else if (MAP[r][c] === 2) {
+            ctx.fillStyle = keysCollected >= 3 ? "#15803d" : "#7f1d1d";
+            ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
+            ctx.fillStyle = "#fff";
+            ctx.font = "bold 10px monospace";
+            ctx.fillText("EXIT", x + 13, y + 29);
+          }
+        }
+      }
+
+      // Draw Items
+      items.forEach(it => {
+        if (it.taken) return;
+        ctx.beginPath();
+        ctx.arc(it.x, it.y, 7, 0, Math.PI * 2);
+        ctx.fillStyle = it.type === "key" ? "#facc15" : "#38bdf8";
+        ctx.fill();
+      });
+
+      // Draw Monster
+      ctx.beginPath();
+      ctx.arc(monster.x, monster.y, monster.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#991b1b";
+      ctx.fill();
+      // Glowing eyes
+      ctx.fillStyle = "#fef08a";
+      ctx.fillRect(monster.x - 5, monster.y - 4, 3, 3);
+      ctx.fillRect(monster.x + 2, monster.y - 4, 3, 3);
+
+      // Draw Player
+      ctx.beginPath();
+      ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
+      ctx.fillStyle = "#e4e4e7";
+      ctx.fill();
+
+      // --- Darkness & Flashlight Mask ---
+      const darkCanvas = document.createElement("canvas");
+      darkCanvas.width = canvas.width;
+      darkCanvas.height = canvas.height;
+      const dCtx = darkCanvas.getContext("2d");
+
+      dCtx.fillStyle = "rgba(0, 0, 0, 0.97)";
+      dCtx.fillRect(0, 0, canvas.width, canvas.height);
+
+      dCtx.globalCompositeOperation = "destination-out";
+
+      // Dim ambient radius around player
+      const amb = dCtx.createRadialGradient(player.x, player.y, 8, player.x, player.y, 48);
+      amb.addColorStop(0, "rgba(0,0,0,1)");
+      amb.addColorStop(1, "rgba(0,0,0,0)");
+      dCtx.fillStyle = amb;
+      dCtx.beginPath();
+      dCtx.arc(player.x, player.y, 48, 0, Math.PI * 2);
+      dCtx.fill();
+
+      // Flashlight Cone
+      if (player.flashlight && player.battery > 0) {
+        const flicker = player.battery < 18 && Math.random() < 0.25 ? 0.35 : 1;
+        const reach = 270 * flicker;
+        const spread = 0.42;
+
+        const cone = dCtx.createRadialGradient(player.x, player.y, 10, player.x, player.y, reach);
+        cone.addColorStop(0, "rgba(0,0,0,1)");
+        cone.addColorStop(0.75, "rgba(0,0,0,0.85)");
+        cone.addColorStop(1, "rgba(0,0,0,0)");
+
+        dCtx.fillStyle = cone;
+        dCtx.beginPath();
+        dCtx.moveTo(player.x, player.y);
+        dCtx.arc(player.x, player.y, reach, player.angle - spread, player.angle + spread);
+        dCtx.closePath();
+        dCtx.fill();
+      }
+
+      ctx.drawImage(darkCanvas, 0, 0);
+      ctx.restore();
+    }
+
+    let lastTime = 0;
+    function loop(ts) {
+      const dt = Math.min(0.05, (ts - lastTime) / 1000);
+      lastTime = ts;
+      update(dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    // Input Listeners
+    window.addEventListener("keydown", e => {
+      const k = e.key.toLowerCase();
+      keysDown[k] = true;
+      if (k === "f" && running && player.battery > 0) {
+        player.flashlight = !player.flashlight;
+        playTone(900, "square", 0.04, 0.1);
+      }
+    });
+    window.addEventListener("keyup", e => keysDown[e.key.toLowerCase()] = false);
+
+    canvas.addEventListener("mousemove", e => {
+      const rect = canvas.getBoundingClientRect();
+      mouse.x = e.clientX - rect.left;
+      mouse.y = e.clientY - rect.top;
+    });
+
+    canvas.addEventListener("mousedown", () => {
+      if (running && player.battery > 0) {
+        player.flashlight = !player.flashlight;
+        playTone(900, "square", 0.04, 0.1);
+      }
+    });
+
+    startBtn.addEventListener("click", () => {
+      initAudio();
+      resetGame();
+      overlay.style.display = "none";
+      running = true;
+    });
+
+    resetGame();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
