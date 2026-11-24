@@ -210,6 +210,53 @@
       [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
     }
 
+    // --- Procedural Wall Texture (64x64) ---
+    const WALL_TEX_SIZE = 64;
+    const wallTexCanvas = document.createElement("canvas");
+    wallTexCanvas.width = WALL_TEX_SIZE;
+    wallTexCanvas.height = WALL_TEX_SIZE;
+    const wTexCtx = wallTexCanvas.getContext("2d");
+
+    function buildWallTexture() {
+      // Base industrial steel/concrete
+      wTexCtx.fillStyle = "#2b2f38";
+      wTexCtx.fillRect(0, 0, WALL_TEX_SIZE, WALL_TEX_SIZE);
+
+      // Subtle noise speckles
+      for (let i = 0; i < 420; i++) {
+        const x = (i * 37) % WALL_TEX_SIZE;
+        const y = (i * 53) % WALL_TEX_SIZE;
+        wTexCtx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.035)" : "rgba(0,0,0,0.08)";
+        wTexCtx.fillRect(x, y, 2, 2);
+      }
+
+      // Horizontal structural ribs & recessed groove
+      wTexCtx.fillStyle = "#181b21";
+      wTexCtx.fillRect(0, 0, WALL_TEX_SIZE, 5);
+      wTexCtx.fillRect(0, WALL_TEX_SIZE - 5, WALL_TEX_SIZE, 5);
+      wTexCtx.fillRect(0, 30, WALL_TEX_SIZE, 3);
+
+      // Vertical panel divider
+      wTexCtx.fillStyle = "#14171c";
+      wTexCtx.fillRect(31, 0, 2, WALL_TEX_SIZE);
+
+      // Rivets along top and bottom plates
+      wTexCtx.fillStyle = "#525866";
+      for (let rx = 7; rx < WALL_TEX_SIZE; rx += 12) {
+        wTexCtx.fillRect(rx, 8, 2, 2);
+        wTexCtx.fillRect(rx, WALL_TEX_SIZE - 10, 2, 2);
+      }
+
+      // Vent grate detail on right panel
+      wTexCtx.fillStyle = "#111318";
+      wTexCtx.fillRect(38, 13, 18, 12);
+      wTexCtx.fillStyle = "#3f4552";
+      for (let vy = 15; vy <= 22; vy += 3) {
+        wTexCtx.fillRect(40, vy, 14, 1);
+      }
+    }
+    buildWallTexture();
+
     // --- 3 Larger Sector Maps (22 cols x 15 rows) ---
     const SECTORS = [
       {
@@ -539,7 +586,6 @@
         return;
       }
 
-      // Monster AI (Stun check + Sprints behind you when spotted)
       const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
 
       if (monster.stunTimer > 0) {
@@ -619,7 +665,6 @@
       rCtx.fillStyle = "rgba(6, 12, 9, 0.9)";
       rCtx.fillRect(0, 0, rw, rh);
 
-      // Radar sweep rings
       rCtx.strokeStyle = "rgba(34, 197, 94, 0.22)";
       rCtx.beginPath();
       rCtx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
@@ -637,7 +682,6 @@
         };
       }
 
-      // Uncollected Keys
       sprites.forEach(sp => {
         if (sp.taken || sp.type !== "key") return;
         const pt = toRadar(sp.x, sp.y);
@@ -647,7 +691,6 @@
         rCtx.fill();
       });
 
-      // Exit Door
       const map = getMap();
       for (let r = 0; r < map.length; r++) {
         for (let c = 0; c < map[0].length; c++) {
@@ -659,7 +702,6 @@
         }
       }
 
-      // Monster blip when within sensor range or chasing
       const mDist = Math.hypot(monster.x - player.x, monster.y - player.y);
       if (mDist < 7.5 || monster.chasing) {
         const mPt = toRadar(monster.x, monster.y);
@@ -669,7 +711,6 @@
         rCtx.fill();
       }
 
-      // Player center marker
       rCtx.fillStyle = "#ffffff";
       rCtx.beginPath();
       rCtx.arc(cx, cy, 3, 0, Math.PI * 2);
@@ -705,20 +746,77 @@
         return;
       }
 
-      ctx.fillStyle = "#060608";
-      ctx.fillRect(0, 0, W, H / 2);
-      ctx.fillStyle = "#0c0c10";
-      ctx.fillRect(0, H / 2, W, H / 2);
+      const bobOffset = Math.sin(bobTimer) * 8;
+      const horizonY = H / 2 + bobOffset;
+
+      // Base dark floor & roof
+      ctx.fillStyle = "#050508";
+      ctx.fillRect(0, 0, W, horizonY);
+      ctx.fillStyle = "#0b0b10";
+      ctx.fillRect(0, horizonY, W, H - horizonY);
 
       const FOV = Math.PI / 3;
-      const NUM_RAYS = 225;
-      const stripW = W / NUM_RAYS;
-      const zBuffer = new Array(NUM_RAYS);
-      const bobOffset = Math.sin(bobTimer) * 8;
+      const dirX = Math.cos(player.angle);
+      const dirY = Math.sin(player.angle);
+      const planeX = -dirY * Math.tan(FOV / 2);
+      const planeY = dirX * Math.tan(FOV / 2);
 
       const flicker = player.flashlight && player.battery > 0
         ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
         : 0;
+
+      // --- 3D Roof & Floor Perspective Grid Strips ---
+      const rayDirX0 = dirX - planeX;
+      const rayDirY0 = dirY - planeY;
+      const rayDirX1 = dirX + planeX;
+      const rayDirY1 = dirY + planeY;
+      const posZ = 0.5 * H;
+
+      for (let y = 16; y < H / 2 - 4; y += 6) {
+        const p = (H / 2) - y;
+        const rowDist = posZ / p;
+        if (rowDist > 8.5) continue;
+
+        const ceilStepX = rowDist * (rayDirX1 - rayDirX0) / W;
+        const ceilStepY = rowDist * (rayDirY1 - rayDirY0) / W;
+        let ceilX = player.x + rowDist * rayDirX0;
+        let ceilY = player.y + rowDist * rayDirY0;
+
+        // Ceiling (roof) above horizon
+        const roofY = horizonY - p;
+        for (let x = 0; x < W; x += 12) {
+          const beamX = Math.abs((ceilX % 1) - 0.5) < 0.07;
+          const beamY = Math.abs((ceilY % 1) - 0.5) < 0.07;
+          const centerFocus = Math.max(0, 1 - Math.abs((x / W) - 0.5) * 2.0);
+          const glow = Math.min(1, flicker * centerFocus * Math.max(0, 1 - rowDist / 7.5) * 0.65 + Math.max(0, 0.16 - rowDist * 0.05));
+
+          if (beamX || beamY) {
+            const v = Math.floor(110 * glow);
+            ctx.fillStyle = `rgb(${v}, ${v}, ${Math.floor(v * 1.15)})`;
+            ctx.fillRect(x, roofY, 12, 6);
+          } else if (glow > 0.04) {
+            const v = Math.floor(42 * glow);
+            ctx.fillStyle = `rgb(${v}, ${v}, ${Math.floor(v * 1.1)})`;
+            ctx.fillRect(x, roofY, 12, 6);
+          }
+
+          // Floor grid below horizon
+          const floorY = horizonY + p;
+          if (floorY < H && (beamX || beamY) && glow > 0.04) {
+            const fv = Math.floor(55 * glow);
+            ctx.fillStyle = `rgb(${fv}, ${fv}, ${Math.floor(fv * 1.1)})`;
+            ctx.fillRect(x, floorY, 12, 6);
+          }
+
+          ceilX += ceilStepX * 12;
+          ceilY += ceilStepY * 12;
+        }
+      }
+
+      // --- Cast Textured 3D Walls ---
+      const NUM_RAYS = 225;
+      const stripW = W / NUM_RAYS;
+      const zBuffer = new Array(NUM_RAYS);
 
       for (let i = 0; i < NUM_RAYS; i++) {
         const rayScreenPos = (i / NUM_RAYS) - 0.5;
@@ -778,16 +876,26 @@
           const r = unlocked ? 25 : 170;
           const g = unlocked ? 185 : 30;
           ctx.fillStyle = `rgb(${Math.floor(r * light)}, ${Math.floor(g * light)}, ${Math.floor(40 * light)})`;
+          ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
         } else {
-          const wallHit = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
-          const seam = (wallHit % 1) < 0.04 ? 0.65 : 1;
-          const shade = Math.floor(145 * light * seam);
-          ctx.fillStyle = `rgb(${shade}, ${shade}, ${Math.floor(shade * 1.08)})`;
-        }
+          let wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
+          wallX -= Math.floor(wallX);
+          const texX = Math.min(WALL_TEX_SIZE - 1, Math.floor(wallX * WALL_TEX_SIZE));
 
-        ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
+          ctx.drawImage(
+            wallTexCanvas,
+            texX, 0, 1, WALL_TEX_SIZE,
+            i * stripW, drawStart, stripW + 1, lineHeight
+          );
+
+          // Darkness overlay over textured column
+          const darkness = Math.max(0, Math.min(0.97, 1 - light * 1.15));
+          ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
+          ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
+        }
       }
 
+      // --- Billboards (Keys, Batteries, and Stalker Monster) ---
       const renderList = [];
       sprites.forEach(sp => {
         if (!sp.taken) renderList.push({ x: sp.x, y: sp.y, kind: sp.type });
@@ -800,16 +908,12 @@
         return db - da;
       });
 
-      const dirX = Math.cos(player.angle);
-      const dirY = Math.sin(player.angle);
-      const planeX = -dirY * Math.tan(FOV / 2);
-      const planeY = dirX * Math.tan(FOV / 2);
+      const invDet = 1.0 / (planeX * dirY - dirX * planeY);
 
       renderList.forEach(obj => {
         const sx = obj.x - player.x;
         const sy = obj.y - player.y;
 
-        const invDet = 1.0 / (planeX * dirY - dirX * planeY);
         const transformX = invDet * (dirY * sx - dirX * sy);
         const transformY = invDet * (-planeY * sx + planeX * sy);
 
@@ -855,7 +959,6 @@
         }
       });
 
-      // EMP Pulse Shockwave Flash
       if (pulseWaveTimer > 0) {
         const alpha = pulseWaveTimer / 0.65;
         ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.85})`;
