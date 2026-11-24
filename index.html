@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LIGHTS OUT // Sector 4</title>
+  <title>LIGHTS OUT 3D // Full Facility</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
-      background: #050507;
-      color: #d4d4d8;
+      background: #040406;
+      color: #e4e4e7;
       font-family: 'Courier New', Courier, monospace;
       display: flex;
       flex-direction: column;
@@ -18,35 +18,63 @@
       overflow: hidden;
     }
     #hud {
-      width: 800px;
+      width: 900px;
       display: flex;
       justify-content: space-between;
-      padding: 10px 16px;
-      background: #0d0d12;
+      gap: 10px;
+      padding: 10px 18px;
+      background: #0c0c10;
       border: 1px solid #27272a;
       border-bottom: none;
-      font-size: 0.9rem;
-      letter-spacing: 1px;
+      font-size: 0.88rem;
+      letter-spacing: 0.8px;
     }
     .danger { color: #ef4444; font-weight: bold; }
     .good { color: #22c55e; }
     .warn { color: #eab308; }
-    #game-wrap {
+    .sector-tag { color: #c084fc; font-weight: bold; }
+    .pulse-ready { color: #38bdf8; font-weight: bold; }
+    #wrap {
       position: relative;
-      width: 800px;
+      width: 900px;
       height: 540px;
       border: 1px solid #27272a;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.95);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.98);
     }
     canvas {
       display: block;
-      background: #09090b;
-      cursor: crosshair;
+      width: 100%;
+      height: 100%;
+      background: #000;
+    }
+    #crosshair {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      width: 6px;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.35);
+      border-radius: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    #radar {
+      position: absolute;
+      right: 14px;
+      bottom: 14px;
+      width: 112px;
+      height: 112px;
+      border-radius: 50%;
+      background: rgba(8, 12, 10, 0.78);
+      border: 1px solid rgba(34, 197, 94, 0.45);
+      box-shadow: 0 0 18px rgba(0, 0, 0, 0.85);
+      pointer-events: none;
+      z-index: 5;
     }
     #overlay {
       position: absolute;
       inset: 0;
-      background: rgba(5, 5, 7, 0.92);
+      background: rgba(4, 4, 6, 0.93);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -56,37 +84,37 @@
       z-index: 10;
     }
     #overlay h1 {
-      font-size: 2.6rem;
+      font-size: 2.5rem;
       color: #ef4444;
-      letter-spacing: 6px;
-      margin-bottom: 12px;
-      text-shadow: 0 0 15px rgba(239, 68, 68, 0.5);
+      letter-spacing: 5px;
+      margin-bottom: 14px;
+      text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
     }
     #overlay p {
-      max-width: 540px;
-      line-height: 1.6;
+      max-width: 590px;
+      line-height: 1.65;
       color: #a1a1aa;
-      margin-bottom: 24px;
+      margin-bottom: 26px;
       font-size: 0.95rem;
     }
     button {
       background: #18181b;
       color: #f4f4f5;
       border: 1px solid #ef4444;
-      padding: 12px 28px;
+      padding: 13px 30px;
       font-family: inherit;
-      font-size: 1rem;
+      font-size: 1.05rem;
       letter-spacing: 2px;
       cursor: pointer;
       transition: 0.2s;
     }
     button:hover {
       background: #ef4444;
-      color: #050507;
+      color: #040406;
       font-weight: bold;
     }
     #controls {
-      width: 800px;
+      width: 900px;
       text-align: center;
       margin-top: 10px;
       font-size: 0.8rem;
@@ -96,39 +124,49 @@
 </head>
 <body>
   <div id="hud">
+    <div>SECTOR: <span id="sec-ui" class="sector-tag">1 / 3</span></div>
     <div>KEYS: <span id="keys-ui" class="warn">0 / 3</span></div>
     <div>BATTERY: <span id="bat-ui" class="good">100%</span></div>
     <div>STAMINA: <span id="stam-ui" class="good">100%</span></div>
+    <div>PULSE [E]: <span id="pulse-ui" class="pulse-ready">READY</span></div>
     <div>STATUS: <span id="status-ui">QUIET</span></div>
   </div>
 
-  <div id="game-wrap">
-    <canvas id="game" width="800" height="540"></canvas>
+  <div id="wrap">
+    <canvas id="game" width="900" height="540"></canvas>
+    <canvas id="radar" width="112" height="112"></canvas>
+    <div id="crosshair"></div>
     <div id="overlay">
-      <h1 id="ov-title">LIGHTS OUT</h1>
+      <h1 id="ov-title">LIGHTS OUT 3D</h1>
       <p id="ov-desc">
-        Collect all <b>3 Security Keys</b> and reach the <b>EXIT</b>.<br><br>
-        When it spots you, it <b>sprints right behind you</b>. Hold <b>SHIFT</b> to run, break line-of-sight around corners, and toggle <b>F</b> to hide in the dark.
+        Survive <b>3 Sectors</b> of the facility. Grab all keys in each sector and unlock the <b>Green Exit</b>.<br><br>
+        It hunts faster in deeper sectors and sprints right behind you when spotted. Use <b>SHIFT</b> to sprint, <b>E</b> to fire a stun pulse when it gets close, <b>F</b> to hide in the dark, and look behind you with your mouse.
       </p>
-      <button id="start-btn">ENTER THE DARK</button>
+      <button id="start-btn">START SECTOR 1</button>
     </div>
   </div>
 
-  <div id="controls">MOVE: WASD / Arrows &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; AIM: Mouse &nbsp;|&nbsp; FLASHLIGHT: F or Click</div>
+  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse (Click screen to lock) &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; FLASHLIGHT: F</div>
 
   <script>
     const canvas = document.getElementById("game");
     const ctx = canvas.getContext("2d");
+    const radarCanvas = document.getElementById("radar");
+    const rCtx = radarCanvas.getContext("2d");
+
     const overlay = document.getElementById("overlay");
     const ovTitle = document.getElementById("ov-title");
     const ovDesc = document.getElementById("ov-desc");
     const startBtn = document.getElementById("start-btn");
 
+    const secUi = document.getElementById("sec-ui");
     const keysUi = document.getElementById("keys-ui");
     const batUi = document.getElementById("bat-ui");
     const stamUi = document.getElementById("stam-ui");
+    const pulseUi = document.getElementById("pulse-ui");
     const statusUi = document.getElementById("status-ui");
 
+    // --- Procedural Web Audio ---
     let audioCtx;
     function initAudio() {
       if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -148,70 +186,201 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
-    function playSpotCue() {
+    function playShriek() {
       if (!audioCtx) return;
-      playTone(190, "sawtooth", 0.22, 0.22);
-      setTimeout(() => playTone(280, "sawtooth", 0.28, 0.2), 90);
+      playTone(175, "sawtooth", 0.35, 0.25);
+      setTimeout(() => playTone(310, "sawtooth", 0.4, 0.22), 80);
     }
 
-    function playScare() {
+    function playPulseSound() {
       if (!audioCtx) return;
-      [55, 62, 110, 146].forEach(f => playTone(f, "sawtooth", 0.9, 0.25));
+      playTone(520, "sine", 0.18, 0.22);
+      setTimeout(() => playTone(140, "square", 0.32, 0.2), 70);
     }
 
-    const TILE = 50;
-    const MAP = [
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-      [1,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
-      [1,0,1,0,1,0,1,1,1,0,1,0,1,1,0,1],
-      [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
-      [1,0,1,1,1,1,1,0,1,1,1,0,1,0,1,1],
-      [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-      [1,1,1,0,1,1,0,1,1,1,1,0,1,1,0,1],
-      [1,0,0,0,1,0,0,0,0,0,1,0,0,1,0,1],
-      [1,0,1,1,1,0,1,1,1,0,1,1,0,1,0,1],
-      [1,0,0,0,0,0,1,0,0,0,0,0,0,0,2,1],
-      [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+    function playSectorClear() {
+      if (!audioCtx) return;
+      [330, 440, 554].forEach((f, idx) => {
+        setTimeout(() => playTone(f, "triangle", 0.25, 0.16), idx * 90);
+      });
+    }
+
+    function playJumpscare() {
+      if (!audioCtx) return;
+      [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
+    }
+
+    // --- 3 Larger Sector Maps (22 cols x 15 rows) ---
+    const SECTORS = [
+      {
+        name: "SECTOR 1 // FLOODED LABS",
+        keysNeeded: 3,
+        playerStart: { x: 1.5, y: 1.5, angle: 0 },
+        monsterStart: { x: 19.5, y: 12.5 },
+        chaseSpeed: 3.25,
+        patrolSpeed: 1.5,
+        keys: [{ x: 9.5, y: 1.5 }, { x: 1.5, y: 13.5 }, { x: 19.5, y: 1.5 }],
+        batteries: [{ x: 10.5, y: 7.5 }, { x: 5.5, y: 11.5 }, { x: 16.5, y: 9.5 }],
+        map: [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
+          [1,0,1,0,1,0,1,1,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
+          [1,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,1],
+          [1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1],
+          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+          [1,1,1,0,1,0,1,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1],
+          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1],
+          [1,0,1,1,1,1,1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1],
+          [1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1],
+          [1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1],
+          [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
+          [1,1,0,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,0,1],
+          [1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ]
+      },
+      {
+        name: "SECTOR 2 // CONTAINMENT MAZE",
+        keysNeeded: 4,
+        playerStart: { x: 1.5, y: 13.5, angle: -Math.PI / 2 },
+        monsterStart: { x: 19.5, y: 1.5 },
+        chaseSpeed: 3.45,
+        patrolSpeed: 1.65,
+        keys: [{ x: 1.5, y: 1.5 }, { x: 10.5, y: 1.5 }, { x: 19.5, y: 7.5 }, { x: 10.5, y: 13.5 }],
+        batteries: [{ x: 6.5, y: 5.5 }, { x: 14.5, y: 5.5 }, { x: 5.5, y: 11.5 }, { x: 16.5, y: 11.5 }],
+        map: [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+          [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1],
+          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
+          [1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1],
+          [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
+          [1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,1,1,1,0,1],
+          [1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+          [1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1],
+          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
+          [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,1,1],
+          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+          [1,1,1,0,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,0,1],
+          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ]
+      },
+      {
+        name: "SECTOR 3 // FINAL ESCAPE",
+        keysNeeded: 5,
+        playerStart: { x: 1.5, y: 1.5, angle: 0 },
+        monsterStart: { x: 19.5, y: 13.5 },
+        chaseSpeed: 3.65,
+        patrolSpeed: 1.8,
+        keys: [
+          { x: 10.5, y: 1.5 },
+          { x: 19.5, y: 1.5 },
+          { x: 1.5, y: 7.5 },
+          { x: 19.5, y: 7.5 },
+          { x: 1.5, y: 13.5 }
+        ],
+        batteries: [
+          { x: 5.5, y: 3.5 },
+          { x: 15.5, y: 3.5 },
+          { x: 10.5, y: 7.5 },
+          { x: 6.5, y: 11.5 },
+          { x: 15.5, y: 11.5 }
+        ],
+        map: [
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+          [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
+          [1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,1,0,1],
+          [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
+          [1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,1],
+          [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
+          [1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1],
+          [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+          [1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
+          [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
+          [1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,1],
+          [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
+          [1,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,1,0,1],
+          [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
+        ]
+      }
     ];
 
+    let sectorIndex = 0;
     let running = false;
+    let jumpscareTimer = 0;
+    let pulseWaveTimer = 0;
     let keysDown = {};
-    let mouse = { x: 400, y: 270 };
-    let player, monster, items, keysCollected, heartbeatTimer = 0, shake = 0;
+    let player, monster, sprites, keysCollected, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
 
-    function resetGame() {
+    function loadSector(idx, preserveBattery = true) {
+      sectorIndex = idx;
+      const sec = SECTORS[idx];
+      const prevBat = preserveBattery && player ? Math.max(35, player.battery) : 100;
+
       player = {
-        x: 75, y: 75, r: 12,
-        walkSpeed: 2.35,
-        sprintSpeed: 3.75,
+        x: sec.playerStart.x,
+        y: sec.playerStart.y,
+        angle: sec.playerStart.angle,
+        walkSpeed: 2.45,
+        sprintSpeed: 3.95,
         stamina: 100,
-        angle: 0,
         flashlight: true,
-        battery: 100
+        battery: prevBat,
+        pulseCooldown: 0
       };
+
       monster = {
-        x: 675, y: 425, r: 15,
-        patrolSpeed: 1.5,
-        chaseSpeed: 3.15,
+        x: sec.monsterStart.x,
+        y: sec.monsterStart.y,
+        patrolSpeed: sec.patrolSpeed,
+        chaseSpeed: sec.chaseSpeed,
         chasing: false,
         memoryTimer: 0,
-        waypoint: { x: 525, y: 275 }
+        stunTimer: 0,
+        targetX: 10.5,
+        targetY: 7.5
       };
-      items = [
-        { x: 275, y: 75, type: "key", taken: false },
-        { x: 75, y: 475, type: "key", taken: false },
-        { x: 675, y: 75, type: "key", taken: false },
-        { x: 425, y: 275, type: "battery", taken: false },
-        { x: 275, y: 425, type: "battery", taken: false }
-      ];
+
+      sprites = [];
+      sec.keys.forEach(k => sprites.push({ x: k.x, y: k.y, type: "key", taken: false }));
+      sec.batteries.forEach(b => sprites.push({ x: b.x, y: b.y, type: "battery", taken: false }));
+
       keysCollected = 0;
-      shake = 0;
+      jumpscareTimer = 0;
+      pulseWaveTimer = 0;
+      updateHUD();
+    }
+
+    function getMap() {
+      return SECTORS[sectorIndex].map;
+    }
+
+    function getKeysNeeded() {
+      return SECTORS[sectorIndex].keysNeeded;
+    }
+
+    function triggerPulse() {
+      if (!running || player.pulseCooldown > 0) return;
+      player.pulseCooldown = 10;
+      pulseWaveTimer = 0.65;
+      playPulseSound();
+
+      const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+      if (dist < 6.5) {
+        monster.stunTimer = 2.6;
+        monster.chasing = false;
+        monster.memoryTimer = 0;
+      }
       updateHUD();
     }
 
     function updateHUD() {
-      keysUi.textContent = `${keysCollected} / 3`;
-      keysUi.className = keysCollected === 3 ? "good" : "warn";
+      const needed = getKeysNeeded();
+      secUi.textContent = `${sectorIndex + 1} / ${SECTORS.length}`;
+      keysUi.textContent = `${keysCollected} / ${needed}`;
+      keysUi.className = keysCollected >= needed ? "good" : "warn";
 
       const b = Math.ceil(player.battery);
       batUi.textContent = `${b}%`;
@@ -220,92 +389,137 @@
       const s = Math.ceil(player.stamina);
       stamUi.textContent = `${s}%`;
       stamUi.className = s > 40 ? "good" : s > 15 ? "warn" : "danger";
+
+      if (player.pulseCooldown > 0) {
+        pulseUi.textContent = `${player.pulseCooldown.toFixed(1)}s`;
+        pulseUi.className = "warn";
+      } else {
+        pulseUi.textContent = "READY";
+        pulseUi.className = "pulse-ready";
+      }
     }
 
-    function isWall(px, py) {
-      const col = Math.floor(px / TILE);
-      const row = Math.floor(py / TILE);
-      if (row < 0 || row >= MAP.length || col < 0 || col >= MAP[0].length) return true;
-      return MAP[row][col] === 1;
+    function isBlocked(x, y) {
+      const map = getMap();
+      const gx = Math.floor(x);
+      const gy = Math.floor(y);
+      if (gy < 0 || gy >= map.length || gx < 0 || gx >= map[0].length) return true;
+      return map[gy][gx] === 1 || (map[gy][gx] === 2 && keysCollected < getKeysNeeded());
     }
 
-    function canMove(x, y, r) {
-      return !isWall(x - r, y - r) && !isWall(x + r, y - r) &&
-             !isWall(x - r, y + r) && !isWall(x + r, y + r);
+    function moveWithSlide(ent, dx, dy, pad = 0.22) {
+      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad) &&
+          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad)) {
+        ent.x += dx;
+      }
+      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad) &&
+          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad)) {
+        ent.y += dy;
+      }
     }
 
     function hasLineOfSight(x1, y1, x2, y2) {
+      const map = getMap();
       const dist = Math.hypot(x2 - x1, y2 - y1);
-      const steps = Math.floor(dist / 10);
+      const steps = Math.ceil(dist * 6);
       for (let i = 1; i < steps; i++) {
         const t = i / steps;
-        if (isWall(x1 + (x2 - x1) * t, y1 + (y2 - y1) * t)) return false;
+        const cx = Math.floor(x1 + (x2 - x1) * t);
+        const cy = Math.floor(y1 + (y2 - y1) * t);
+        if (map[cy] && map[cy][cx] === 1) return false;
       }
       return true;
     }
 
-    function moveEntity(ent, dx, dy) {
-      if (canMove(ent.x + dx, ent.y, ent.r)) ent.x += dx;
-      if (canMove(ent.x, ent.y + dy, ent.r)) ent.y += dy;
-    }
-
-    function endGame(won) {
+    function openOverlay(mode) {
       running = false;
+      if (document.pointerLockElement) document.exitPointerLock();
       overlay.style.display = "flex";
-      if (won) {
-        ovTitle.textContent = "YOU ESCAPED";
+
+      if (mode === "nextSector") {
+        playSectorClear();
+        const nextIdx = sectorIndex + 1;
+        ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
+        ovTitle.style.color = "#c084fc";
+        ovDesc.innerHTML = `You made it through the exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys required, faster pursuit).`;
+        startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
+        startBtn.dataset.action = "nextSector";
+      } else if (mode === "wonAll") {
+        playSectorClear();
+        ovTitle.textContent = "FACILITY ESCAPED";
         ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You outran the dark and escaped Sector 4.<br><br>Play again?";
+        ovDesc.innerHTML = "You survived all 3 sectors and escaped into the open air.<br><br>Want to run the full campaign again?";
+        startBtn.textContent = "PLAY FULL RUN AGAIN";
+        startBtn.dataset.action = "restartAll";
       } else {
-        playScare();
         ovTitle.textContent = "IT CAUGHT YOU";
         ovTitle.style.color = "#ef4444";
-        ovDesc.innerHTML = "It sprinted right behind you.<br><br>Tip: Sprint around sharp corners and click <b>F</b> to drop off its radar.";
+        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Fire a stun pulse (<b>E</b>) when it closes in, sprint around corners (<b>SHIFT</b>), and toggle <b>F</b> to hide.`;
+        startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
+        startBtn.dataset.action = "retrySector";
       }
-      startBtn.textContent = "PLAY AGAIN";
     }
 
     function update(dt) {
+      if (jumpscareTimer > 0) {
+        jumpscareTimer -= dt;
+        if (jumpscareTimer <= 0) openOverlay("caught");
+        return;
+      }
       if (!running) return;
 
-      // Player Movement & Sprint
-      let mx = 0, my = 0;
-      if (keysDown["w"] || keysDown["arrowup"]) my -= 1;
-      if (keysDown["s"] || keysDown["arrowdown"]) my += 1;
-      if (keysDown["a"] || keysDown["arrowleft"]) mx -= 1;
-      if (keysDown["d"] || keysDown["arrowright"]) mx += 1;
+      if (player.pulseCooldown > 0) player.pulseCooldown = Math.max(0, player.pulseCooldown - dt);
+      if (pulseWaveTimer > 0) pulseWaveTimer = Math.max(0, pulseWaveTimer - dt);
 
-      const moving = mx !== 0 || my !== 0;
-      const wantsSprint = (keysDown["shift"] || keysDown["shiftleft"] || keysDown["shiftright"]) && moving && player.stamina > 2;
+      if (keysDown["arrowleft"]) player.angle -= 2.3 * dt;
+      if (keysDown["arrowright"]) player.angle += 2.3 * dt;
 
-      if (wantsSprint) {
-        player.stamina = Math.max(0, player.stamina - dt * 34);
+      const cos = Math.cos(player.angle);
+      const sin = Math.sin(player.angle);
+      let fwd = 0, strafe = 0;
+      if (keysDown["w"] || keysDown["arrowup"]) fwd += 1;
+      if (keysDown["s"] || keysDown["arrowdown"]) fwd -= 1;
+      if (keysDown["d"]) strafe += 1;
+      if (keysDown["a"]) strafe -= 1;
+
+      const moving = fwd !== 0 || strafe !== 0;
+      const sprinting = (keysDown["shift"] || keysDown["shiftleft"]) && moving && player.stamina > 2;
+
+      if (sprinting) {
+        player.stamina = Math.max(0, player.stamina - dt * 31);
       } else {
         player.stamina = Math.min(100, player.stamina + dt * (moving ? 14 : 24));
       }
 
-      const pSpeed = wantsSprint ? player.sprintSpeed : player.walkSpeed;
+      const speed = sprinting ? player.sprintSpeed : player.walkSpeed;
 
       if (moving) {
-        const len = Math.hypot(mx, my);
-        moveEntity(player, (mx / len) * pSpeed, (my / len) * pSpeed);
+        let vx = cos * fwd - sin * strafe;
+        let vy = sin * fwd + cos * strafe;
+        const len = Math.hypot(vx, vy);
+        moveWithSlide(player, (vx / len) * speed * dt, (vy / len) * speed * dt);
+
+        bobTimer += dt * (sprinting ? 14 : 9);
+        footstepTimer -= dt * (sprinting ? 3.2 : 1.9);
+        if (footstepTimer <= 0) {
+          playTone(sprinting ? 95 : 75, "triangle", 0.06, sprinting ? 0.12 : 0.06);
+          footstepTimer = 1;
+        }
+      } else {
+        bobTimer = 0;
       }
 
-      player.angle = Math.atan2(mouse.y - player.y, mouse.x - player.x);
-
-      // Battery Drain
       if (player.flashlight && player.battery > 0) {
-        player.battery = Math.max(0, player.battery - dt * 2.4);
+        player.battery = Math.max(0, player.battery - dt * 2.0);
         if (player.battery === 0) player.flashlight = false;
       }
 
-      // Items Pickup
-      items.forEach(it => {
-        if (!it.taken && Math.hypot(player.x - it.x, player.y - it.y) < 26) {
-          it.taken = true;
-          if (it.type === "key") {
+      sprites.forEach(sp => {
+        if (!sp.taken && Math.hypot(player.x - sp.x, player.y - sp.y) < 0.65) {
+          sp.taken = true;
+          if (sp.type === "key") {
             keysCollected++;
-            playTone(620, "sine", 0.25, 0.2);
+            playTone(660, "sine", 0.25, 0.2);
           } else {
             player.battery = Math.min(100, player.battery + 45);
             playTone(440, "triangle", 0.2, 0.2);
@@ -313,164 +527,355 @@
         }
       });
 
-      // Exit Check
-      const col = Math.floor(player.x / TILE);
-      const row = Math.floor(player.y / TILE);
-      if (MAP[row][col] === 2) {
-        if (keysCollected >= 3) {
-          endGame(true);
-          return;
+      const map = getMap();
+      const gx = Math.floor(player.x);
+      const gy = Math.floor(player.y);
+      if (map[gy] && map[gy][gx] === 2 && keysCollected >= getKeysNeeded()) {
+        if (sectorIndex + 1 < SECTORS.length) {
+          openOverlay("nextSector");
         } else {
-          statusUi.textContent = "LOCKED (NEED 3 KEYS)";
-          statusUi.className = "warn";
+          openOverlay("wonAll");
         }
+        return;
       }
 
-      // Monster Chase & Pursuit AI
-      const distToPlayer = Math.hypot(player.x - monster.x, player.y - monster.y);
-      const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
-      const detectRange = player.flashlight ? 300 : (wantsSprint ? 165 : 105);
+      // Monster AI (Stun check + Sprints behind you when spotted)
+      const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
 
-      if (los && distToPlayer < detectRange) {
-        if (!monster.chasing) playSpotCue();
-        monster.chasing = true;
-        monster.memoryTimer = 2.6; // Keeps chasing your last position for 2.6s if you break LOS
-        monster.waypoint = { x: player.x, y: player.y };
-      } else if (monster.chasing) {
-        monster.memoryTimer -= dt;
-        if (monster.memoryTimer <= 0) {
-          monster.chasing = false;
-        }
-      }
-
-      if (!monster.chasing && Math.hypot(monster.waypoint.x - monster.x, monster.waypoint.y - monster.y) < 22) {
-        let rx, ry;
-        do {
-          rx = Math.floor(Math.random() * 14 + 1) * TILE + 25;
-          ry = Math.floor(Math.random() * 9 + 1) * TILE + 25;
-        } while (isWall(rx, ry));
-        monster.waypoint = { x: rx, y: ry };
-      }
-
-      const spd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
-      const ang = Math.atan2(monster.waypoint.y - monster.y, monster.waypoint.x - monster.x);
-      moveEntity(monster, Math.cos(ang) * spd, Math.sin(ang) * spd);
-
-      // Proximity Heartbeat & Status
-      if (distToPlayer < 260 || monster.chasing) {
-        const proximity = Math.max(0, (260 - distToPlayer) / 40);
-        shake = monster.chasing ? Math.max(2.5, proximity) : proximity * 0.7;
-        heartbeatTimer -= dt * (monster.chasing ? 3.8 : 2.0);
-        if (heartbeatTimer <= 0) {
-          playTone(65, "sine", 0.14, 0.25);
-          heartbeatTimer = 1;
-        }
-        statusUi.textContent = monster.chasing ? "RUNNING BEHIND YOU!" : "NEARBY...";
-        statusUi.className = "danger";
+      if (monster.stunTimer > 0) {
+        monster.stunTimer = Math.max(0, monster.stunTimer - dt);
+        statusUi.textContent = "STUNNED — RUN!";
+        statusUi.className = "pulse-ready";
       } else {
-        shake = 0;
-        if (MAP[row][col] !== 2) {
+        const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
+        const detectRange = player.flashlight ? 7.0 : (sprinting ? 4.4 : 2.4);
+
+        if (los && dist < detectRange) {
+          if (!monster.chasing) playShriek();
+          monster.chasing = true;
+          monster.memoryTimer = 3.4 + sectorIndex * 0.35;
+          monster.targetX = player.x;
+          monster.targetY = player.y;
+        } else if (monster.chasing) {
+          monster.memoryTimer -= dt;
+          if (monster.memoryTimer <= 0) {
+            monster.chasing = false;
+          }
+        }
+
+        if (!monster.chasing && Math.hypot(monster.targetX - monster.x, monster.targetY - monster.y) < 0.5) {
+          let rx, ry;
+          do {
+            rx = Math.floor(Math.random() * (map[0].length - 2)) + 1.5;
+            ry = Math.floor(Math.random() * (map.length - 2)) + 1.5;
+          } while (isBlocked(rx, ry));
+          monster.targetX = rx;
+          monster.targetY = ry;
+        }
+
+        const mSpd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
+        const mAng = Math.atan2(monster.targetY - monster.y, monster.targetX - monster.x);
+        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2);
+
+        if (dist < 6.8 || monster.chasing) {
+          monsterStepTimer -= dt * (monster.chasing ? 4.4 : 1.9);
+          if (monsterStepTimer <= 0) {
+            const vol = Math.min(0.28, (6.8 / Math.max(1, dist)) * 0.14);
+            playTone(52, "sine", 0.14, vol);
+            monsterStepTimer = 1;
+          }
+          statusUi.textContent = monster.chasing ? "BEHIND YOU — RUN!" : "FOOTSTEPS NEARBY...";
+          statusUi.className = "danger";
+        } else {
           statusUi.textContent = "QUIET";
           statusUi.className = "";
         }
-      }
 
-      if (distToPlayer < player.r + monster.r - 2) {
-        endGame(false);
-        return;
+        if (dist < 0.52) {
+          running = false;
+          jumpscareTimer = 0.85;
+          playJumpscare();
+          return;
+        }
       }
 
       updateHUD();
     }
 
-    function draw() {
-      ctx.save();
-      if (shake > 0 && running) {
-        ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
+    function renderRadar() {
+      const rw = radarCanvas.width;
+      const rh = radarCanvas.height;
+      const cx = rw / 2;
+      const cy = rh / 2;
+      const radius = rw / 2 - 4;
+      const scale = 9;
+
+      rCtx.clearRect(0, 0, rw, rh);
+      rCtx.save();
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+      rCtx.clip();
+
+      rCtx.fillStyle = "rgba(6, 12, 9, 0.9)";
+      rCtx.fillRect(0, 0, rw, rh);
+
+      // Radar sweep rings
+      rCtx.strokeStyle = "rgba(34, 197, 94, 0.22)";
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+      rCtx.stroke();
+
+      const cos = Math.cos(-player.angle - Math.PI / 2);
+      const sin = Math.sin(-player.angle - Math.PI / 2);
+
+      function toRadar(wx, wy) {
+        const dx = wx - player.x;
+        const dy = wy - player.y;
+        return {
+          x: cx + (dx * cos - dy * sin) * scale,
+          y: cy + (dx * sin + dy * cos) * scale
+        };
       }
 
-      ctx.fillStyle = "#09090b";
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      // Uncollected Keys
+      sprites.forEach(sp => {
+        if (sp.taken || sp.type !== "key") return;
+        const pt = toRadar(sp.x, sp.y);
+        rCtx.fillStyle = "#facc15";
+        rCtx.beginPath();
+        rCtx.arc(pt.x, pt.y, 2.8, 0, Math.PI * 2);
+        rCtx.fill();
+      });
 
-      for (let r = 0; r < MAP.length; r++) {
-        for (let c = 0; c < MAP[0].length; c++) {
-          const x = c * TILE, y = r * TILE;
-          if (MAP[r][c] === 1) {
-            ctx.fillStyle = "#18181b";
-            ctx.fillRect(x, y, TILE, TILE);
-            ctx.strokeStyle = "#27272a";
-            ctx.strokeRect(x, y, TILE, TILE);
-          } else if (MAP[r][c] === 2) {
-            ctx.fillStyle = keysCollected >= 3 ? "#15803d" : "#7f1d1d";
-            ctx.fillRect(x + 4, y + 4, TILE - 8, TILE - 8);
-            ctx.fillStyle = "#fff";
-            ctx.font = "bold 10px monospace";
-            ctx.fillText("EXIT", x + 13, y + 29);
+      // Exit Door
+      const map = getMap();
+      for (let r = 0; r < map.length; r++) {
+        for (let c = 0; c < map[0].length; c++) {
+          if (map[r][c] === 2) {
+            const pt = toRadar(c + 0.5, r + 0.5);
+            rCtx.fillStyle = keysCollected >= getKeysNeeded() ? "#22c55e" : "#71717a";
+            rCtx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
           }
         }
       }
 
-      items.forEach(it => {
-        if (it.taken) return;
-        ctx.beginPath();
-        ctx.arc(it.x, it.y, 7, 0, Math.PI * 2);
-        ctx.fillStyle = it.type === "key" ? "#facc15" : "#38bdf8";
-        ctx.fill();
-      });
-
-      // Monster
-      ctx.beginPath();
-      ctx.arc(monster.x, monster.y, monster.r, 0, Math.PI * 2);
-      ctx.fillStyle = monster.chasing ? "#dc2626" : "#7f1d1d";
-      ctx.fill();
-      ctx.fillStyle = monster.chasing ? "#ffffff" : "#fef08a";
-      ctx.fillRect(monster.x - 5, monster.y - 4, 3, 3);
-      ctx.fillRect(monster.x + 2, monster.y - 4, 3, 3);
-
-      // Player
-      ctx.beginPath();
-      ctx.arc(player.x, player.y, player.r, 0, Math.PI * 2);
-      ctx.fillStyle = "#e4e4e7";
-      ctx.fill();
-
-      // Darkness & Flashlight Mask
-      const darkCanvas = document.createElement("canvas");
-      darkCanvas.width = canvas.width;
-      darkCanvas.height = canvas.height;
-      const dCtx = darkCanvas.getContext("2d");
-
-      dCtx.fillStyle = "rgba(0, 0, 0, 0.97)";
-      dCtx.fillRect(0, 0, canvas.width, canvas.height);
-      dCtx.globalCompositeOperation = "destination-out";
-
-      const amb = dCtx.createRadialGradient(player.x, player.y, 8, player.x, player.y, 48);
-      amb.addColorStop(0, "rgba(0,0,0,1)");
-      amb.addColorStop(1, "rgba(0,0,0,0)");
-      dCtx.fillStyle = amb;
-      dCtx.beginPath();
-      dCtx.arc(player.x, player.y, 48, 0, Math.PI * 2);
-      dCtx.fill();
-
-      if (player.flashlight && player.battery > 0) {
-        const flicker = player.battery < 18 && Math.random() < 0.25 ? 0.35 : 1;
-        const reach = 270 * flicker;
-        const spread = 0.42;
-
-        const cone = dCtx.createRadialGradient(player.x, player.y, 10, player.x, player.y, reach);
-        cone.addColorStop(0, "rgba(0,0,0,1)");
-        cone.addColorStop(0.75, "rgba(0,0,0,0.85)");
-        cone.addColorStop(1, "rgba(0,0,0,0)");
-
-        dCtx.fillStyle = cone;
-        dCtx.beginPath();
-        dCtx.moveTo(player.x, player.y);
-        dCtx.arc(player.x, player.y, reach, player.angle - spread, player.angle + spread);
-        dCtx.closePath();
-        dCtx.fill();
+      // Monster blip when within sensor range or chasing
+      const mDist = Math.hypot(monster.x - player.x, monster.y - player.y);
+      if (mDist < 7.5 || monster.chasing) {
+        const mPt = toRadar(monster.x, monster.y);
+        rCtx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : "#ef4444";
+        rCtx.beginPath();
+        rCtx.arc(mPt.x, mPt.y, 3.8, 0, Math.PI * 2);
+        rCtx.fill();
       }
 
-      ctx.drawImage(darkCanvas, 0, 0);
-      ctx.restore();
+      // Player center marker
+      rCtx.fillStyle = "#ffffff";
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, 3, 0, Math.PI * 2);
+      rCtx.fill();
+
+      rCtx.restore();
+    }
+
+    function render3D() {
+      const W = canvas.width;
+      const H = canvas.height;
+      const map = getMap();
+
+      if (jumpscareTimer > 0) {
+        ctx.fillStyle = Math.random() < 0.5 ? "#7f1d1d" : "#09090b";
+        ctx.fillRect(0, 0, W, H);
+        const shakeX = (Math.random() - 0.5) * 40;
+        const shakeY = (Math.random() - 0.5) * 40;
+
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(W / 2 + shakeX, H / 2 + shakeY, 190, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.arc(W / 2 - 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
+        ctx.arc(W / 2 + 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(W / 2 - 75 + shakeX, H / 2 + 45 + shakeY, 150, 55);
+        return;
+      }
+
+      ctx.fillStyle = "#060608";
+      ctx.fillRect(0, 0, W, H / 2);
+      ctx.fillStyle = "#0c0c10";
+      ctx.fillRect(0, H / 2, W, H / 2);
+
+      const FOV = Math.PI / 3;
+      const NUM_RAYS = 225;
+      const stripW = W / NUM_RAYS;
+      const zBuffer = new Array(NUM_RAYS);
+      const bobOffset = Math.sin(bobTimer) * 8;
+
+      const flicker = player.flashlight && player.battery > 0
+        ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
+        : 0;
+
+      for (let i = 0; i < NUM_RAYS; i++) {
+        const rayScreenPos = (i / NUM_RAYS) - 0.5;
+        const rayAngle = player.angle + rayScreenPos * FOV;
+        const rayDirX = Math.cos(rayAngle);
+        const rayDirY = Math.sin(rayAngle);
+
+        let mapX = Math.floor(player.x);
+        let mapY = Math.floor(player.y);
+
+        const deltaDistX = Math.abs(1 / (rayDirX || 1e-6));
+        const deltaDistY = Math.abs(1 / (rayDirY || 1e-6));
+
+        let stepX, sideDistX, stepY, sideDistY;
+        if (rayDirX < 0) {
+          stepX = -1;
+          sideDistX = (player.x - mapX) * deltaDistX;
+        } else {
+          stepX = 1;
+          sideDistX = (mapX + 1.0 - player.x) * deltaDistX;
+        }
+        if (rayDirY < 0) {
+          stepY = -1;
+          sideDistY = (player.y - mapY) * deltaDistY;
+        } else {
+          stepY = 1;
+          sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
+        }
+
+        let hit = 0, side = 0;
+        while (hit === 0) {
+          if (sideDistX < sideDistY) {
+            sideDistX += deltaDistX;
+            mapX += stepX;
+            side = 0;
+          } else {
+            sideDistY += deltaDistY;
+            mapY += stepY;
+            side = 1;
+          }
+          if (map[mapY] && map[mapY][mapX] > 0) hit = map[mapY][mapX];
+        }
+
+        const perpDist = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+        zBuffer[i] = perpDist;
+
+        const lineHeight = H / Math.max(0.05, perpDist);
+        const drawStart = (H - lineHeight) / 2 + bobOffset;
+
+        const centerFocus = Math.max(0, 1 - Math.abs(rayScreenPos) * 2.1);
+        const beamLight = flicker * centerFocus * Math.max(0, 1 - perpDist / 7.5);
+        const ambientLight = Math.max(0, 0.22 - perpDist * 0.08);
+        const light = Math.min(1, beamLight + ambientLight) * (side === 1 ? 0.78 : 1);
+
+        if (hit === 2) {
+          const unlocked = keysCollected >= getKeysNeeded();
+          const r = unlocked ? 25 : 170;
+          const g = unlocked ? 185 : 30;
+          ctx.fillStyle = `rgb(${Math.floor(r * light)}, ${Math.floor(g * light)}, ${Math.floor(40 * light)})`;
+        } else {
+          const wallHit = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
+          const seam = (wallHit % 1) < 0.04 ? 0.65 : 1;
+          const shade = Math.floor(145 * light * seam);
+          ctx.fillStyle = `rgb(${shade}, ${shade}, ${Math.floor(shade * 1.08)})`;
+        }
+
+        ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
+      }
+
+      const renderList = [];
+      sprites.forEach(sp => {
+        if (!sp.taken) renderList.push({ x: sp.x, y: sp.y, kind: sp.type });
+      });
+      renderList.push({ x: monster.x, y: monster.y, kind: "monster" });
+
+      renderList.sort((a, b) => {
+        const da = (player.x - a.x) ** 2 + (player.y - a.y) ** 2;
+        const db = (player.x - b.x) ** 2 + (player.y - b.y) ** 2;
+        return db - da;
+      });
+
+      const dirX = Math.cos(player.angle);
+      const dirY = Math.sin(player.angle);
+      const planeX = -dirY * Math.tan(FOV / 2);
+      const planeY = dirX * Math.tan(FOV / 2);
+
+      renderList.forEach(obj => {
+        const sx = obj.x - player.x;
+        const sy = obj.y - player.y;
+
+        const invDet = 1.0 / (planeX * dirY - dirX * planeY);
+        const transformX = invDet * (dirY * sx - dirX * sy);
+        const transformY = invDet * (-planeY * sx + planeX * sy);
+
+        if (transformY <= 0.15) return;
+
+        const screenX = (W / 2) * (1 + transformX / transformY);
+        const spriteSize = Math.abs(H / transformY);
+        const rayIdx = Math.floor((screenX / W) * NUM_RAYS);
+
+        if (rayIdx < 0 || rayIdx >= NUM_RAYS || transformY >= zBuffer[rayIdx]) return;
+
+        const normScreen = (screenX / W) - 0.5;
+        const centerFocus = Math.max(0, 1 - Math.abs(normScreen) * 2.1);
+        const light = Math.min(1, flicker * centerFocus * Math.max(0, 1 - transformY / 7.5) + Math.max(0, 0.25 - transformY * 0.08));
+
+        if (obj.kind === "monster") {
+          const mW = spriteSize * 0.55;
+          const mH = spriteSize * 0.88;
+          const topY = H / 2 - mH * 0.42 + bobOffset;
+
+          ctx.fillStyle = monster.stunTimer > 0
+            ? `rgba(30, 58, 138, ${Math.max(0.5, light)})`
+            : `rgba(15, 5, 5, ${Math.max(0.45, light)})`;
+          ctx.beginPath();
+          ctx.ellipse(screenX, topY + mH * 0.5, mW * 0.48, mH * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          const eyeY = topY + mH * 0.22;
+          const eyeSpread = mW * 0.18;
+          const eyeR = Math.max(2, spriteSize * 0.032);
+          ctx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : (monster.chasing ? "#ef4444" : "#fef08a");
+          ctx.beginPath();
+          ctx.arc(screenX - eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
+          ctx.arc(screenX + eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const itemR = Math.max(4, spriteSize * 0.14);
+          const itemY = H / 2 + spriteSize * 0.22 + bobOffset + Math.sin(performance.now() * 0.005) * 6;
+          ctx.fillStyle = obj.kind === "key" ? "#facc15" : "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(screenX, itemY, itemR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      // EMP Pulse Shockwave Flash
+      if (pulseWaveTimer > 0) {
+        const alpha = pulseWaveTimer / 0.65;
+        ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.85})`;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, (1 - alpha) * 340 + 30, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      if (monster.chasing && monster.stunTimer <= 0) {
+        const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+        const pulse = 0.25 + Math.max(0, (5 - dist) / 5) * 0.35;
+        const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.65);
+        grad.addColorStop(0, "rgba(220, 38, 38, 0)");
+        grad.addColorStop(1, `rgba(220, 38, 38, ${pulse})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      renderRadar();
     }
 
     let lastTime = 0;
@@ -478,7 +883,7 @@
       const dt = Math.min(0.05, (ts - lastTime) / 1000);
       lastTime = ts;
       update(dt);
-      draw();
+      render3D();
       requestAnimationFrame(loop);
     }
 
@@ -489,26 +894,42 @@
         player.flashlight = !player.flashlight;
         playTone(900, "square", 0.04, 0.1);
       }
+      if (k === "e" && running) {
+        triggerPulse();
+      }
     });
     window.addEventListener("keyup", e => keysDown[e.key.toLowerCase()] = false);
 
-    canvas.addEventListener("mousemove", e => {
-      const rect = canvas.getBoundingClientRect();
-      mouse.x = e.clientX - rect.left;
-      mouse.y = e.clientY - rect.top;
-    });
-
-    canvas.addEventListener("mousedown", () => {
-      if (running && player.battery > 0) {
-        player.flashlight = !player.flashlight;
-        playTone(900, "square", 0.04, 0.1);
+    document.addEventListener("mousemove", e => {
+      if (document.pointerLockElement === canvas && running) {
+        player.angle += e.movementX * 0.0028;
       }
     });
 
-    startBtn.addEventListener("click", () => {
-      initAudio();
-      resetGame();
-      overlay.style.display = "none";
-      running = true;
+    canvas.addEventListener("click", () => {
+      if (running && document.pointerLockElement !== canvas) {
+        canvas.requestPointerLock();
+      }
     });
 
+    startBtn.dataset.action = "start";
+    startBtn.addEventListener("click", () => {
+      initAudio();
+      const action = startBtn.dataset.action;
+      if (action === "nextSector") {
+        loadSector(sectorIndex + 1, true);
+      } else if (action === "retrySector") {
+        loadSector(sectorIndex, false);
+      } else {
+        loadSector(0, false);
+      }
+      overlay.style.display = "none";
+      running = true;
+      canvas.requestPointerLock();
+    });
+
+    loadSector(0, false);
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
