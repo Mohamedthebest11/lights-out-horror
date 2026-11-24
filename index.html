@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>LIGHTS OUT 3D // Full Facility</title>
+  <title>LIGHTS OUT 3D // Rooms & Closets</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
     body {
@@ -26,7 +26,7 @@
       background: #0c0c10;
       border: 1px solid #27272a;
       border-bottom: none;
-      font-size: 0.88rem;
+      font-size: 0.86rem;
       letter-spacing: 0.8px;
     }
     .danger { color: #ef4444; font-weight: bold; }
@@ -51,12 +51,41 @@
       position: absolute;
       top: 50%;
       left: 50%;
-      width: 6px;
-      height: 6px;
-      background: rgba(255, 255, 255, 0.35);
+      width: 7px;
+      height: 7px;
+      border: 1.5px solid rgba(255, 255, 255, 0.55);
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
+    }
+    #prompt {
+      position: absolute;
+      top: 56%;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(10, 10, 14, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #f4f4f5;
+      padding: 6px 14px;
+      font-size: 0.85rem;
+      letter-spacing: 1px;
+      border-radius: 4px;
+      pointer-events: none;
+      display: none;
+      z-index: 6;
+    }
+    #room-banner {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      background: rgba(10, 10, 14, 0.72);
+      border-left: 3px solid #c084fc;
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      color: #d4d4d8;
+      letter-spacing: 1.5px;
+      pointer-events: none;
+      z-index: 5;
     }
     #radar {
       position: absolute;
@@ -84,18 +113,18 @@
       z-index: 10;
     }
     #overlay h1 {
-      font-size: 2.5rem;
+      font-size: 2.4rem;
       color: #ef4444;
       letter-spacing: 5px;
       margin-bottom: 14px;
       text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
     }
     #overlay p {
-      max-width: 590px;
+      max-width: 610px;
       line-height: 1.65;
       color: #a1a1aa;
       margin-bottom: 26px;
-      font-size: 0.95rem;
+      font-size: 0.94rem;
     }
     button {
       background: #18181b;
@@ -134,19 +163,21 @@
 
   <div id="wrap">
     <canvas id="game" width="900" height="540"></canvas>
+    <div id="room-banner">MAIN CORRIDOR</div>
+    <div id="prompt">[R / CLICK] OPEN CLOSET</div>
     <canvas id="radar" width="112" height="112"></canvas>
     <div id="crosshair"></div>
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT 3D</h1>
       <p id="ov-desc">
-        Survive <b>3 Sectors</b> of the facility. Grab all keys in each sector and unlock the <b>Green Exit</b>.<br><br>
-        It hunts faster in deeper sectors and sprints right behind you when spotted. Use <b>SHIFT</b> to sprint, <b>E</b> to fire a stun pulse when it gets close, <b>F</b> to hide in the dark, and look behind you with your mouse.
+        Explore the facility's <b>Rooms</b>, open doors (<b>R</b> or <b>Click</b>), and search inside <b>Closets</b> to find hidden Security Keys and Batteries.<br><br>
+        When it spots your light or hears you sprint, it charges right behind you—and it can open room doors too.
       </p>
       <button id="start-btn">START SECTOR 1</button>
     </div>
   </div>
 
-  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse (Click screen to lock) &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; FLASHLIGHT: F</div>
+  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse &nbsp;|&nbsp; OPEN DOOR / CLOSET: R or Click &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; LIGHT: F</div>
 
   <script>
     const canvas = document.getElementById("game");
@@ -158,6 +189,8 @@
     const ovTitle = document.getElementById("ov-title");
     const ovDesc = document.getElementById("ov-desc");
     const startBtn = document.getElementById("start-btn");
+    const promptEl = document.getElementById("prompt");
+    const roomBannerEl = document.getElementById("room-banner");
 
     const secUi = document.getElementById("sec-ui");
     const keysUi = document.getElementById("keys-ui");
@@ -186,6 +219,18 @@
       osc.stop(audioCtx.currentTime + duration);
     }
 
+    function playDoorSound(opening = true) {
+      if (!audioCtx) return;
+      playTone(opening ? 140 : 110, "sawtooth", 0.16, 0.12);
+      setTimeout(() => playTone(opening ? 190 : 85, "triangle", 0.18, 0.1), 70);
+    }
+
+    function playClosetCreak() {
+      if (!audioCtx) return;
+      playTone(230, "sawtooth", 0.14, 0.12);
+      setTimeout(() => playTone(165, "sawtooth", 0.22, 0.12), 80);
+    }
+
     function playShriek() {
       if (!audioCtx) return;
       playTone(175, "sawtooth", 0.35, 0.25);
@@ -210,151 +255,243 @@
       [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
     }
 
-    // --- High-Resolution Clean Architectural Wall Texture (512x512, Non-Pixelated) ---
-    const WALL_TEX_SIZE = 512;
-    const wallTexCanvas = document.createElement("canvas");
-    wallTexCanvas.width = WALL_TEX_SIZE;
-    wallTexCanvas.height = WALL_TEX_SIZE;
-    const wTexCtx = wallTexCanvas.getContext("2d");
+    // --- High-Resolution Clean Architectural Textures (512x512) ---
+    const TEX_SIZE = 512;
 
-    function buildCleanWallTexture() {
-      // Smooth brushed architectural slate gradient
-      const baseGrad = wTexCtx.createLinearGradient(0, 0, 0, WALL_TEX_SIZE);
-      baseGrad.addColorStop(0.0, "#1c2028");
-      baseGrad.addColorStop(0.14, "#313744");
-      baseGrad.addColorStop(0.5, "#3b4252");
-      baseGrad.addColorStop(0.86, "#2c313d");
-      baseGrad.addColorStop(1.0, "#171a21");
-      wTexCtx.fillStyle = baseGrad;
-      wTexCtx.fillRect(0, 0, WALL_TEX_SIZE, WALL_TEX_SIZE);
-
-      // Subtle horizontal sheen band
-      const sheen = wTexCtx.createLinearGradient(0, 175, 0, 260);
-      sheen.addColorStop(0, "rgba(255, 255, 255, 0)");
-      sheen.addColorStop(0.5, "rgba(255, 255, 255, 0.05)");
-      sheen.addColorStop(1, "rgba(255, 255, 255, 0)");
-      wTexCtx.fillStyle = sheen;
-      wTexCtx.fillRect(0, 175, WALL_TEX_SIZE, 85);
-
-      // Clean recessed architectural seam lines
-      wTexCtx.fillStyle = "rgba(10, 12, 16, 0.55)";
-      wTexCtx.fillRect(0, 56, WALL_TEX_SIZE, 3);
-      wTexCtx.fillRect(0, WALL_TEX_SIZE - 58, WALL_TEX_SIZE, 3);
-      wTexCtx.fillRect(254, 56, 3, WALL_TEX_SIZE - 114);
-
-      // Crisp highlight edge beside seam
-      wTexCtx.fillStyle = "rgba(255, 255, 255, 0.07)";
-      wTexCtx.fillRect(0, 59, WALL_TEX_SIZE, 2);
-      wTexCtx.fillRect(257, 56, 2, WALL_TEX_SIZE - 114);
-
-      // Sleek recessed glass/light trim strip along upper wall
-      const trimGrad = wTexCtx.createLinearGradient(0, 96, 0, 114);
-      trimGrad.addColorStop(0, "#12151c");
-      trimGrad.addColorStop(0.5, "#5b677d");
-      trimGrad.addColorStop(1, "#12151c");
-      wTexCtx.fillStyle = trimGrad;
-      wTexCtx.fillRect(24, 96, WALL_TEX_SIZE - 48, 16);
-
-      // Clean dark baseboard molding
-      wTexCtx.fillStyle = "#13161d";
-      wTexCtx.fillRect(0, WALL_TEX_SIZE - 55, WALL_TEX_SIZE, 55);
-      wTexCtx.fillStyle = "rgba(255, 255, 255, 0.06)";
-      wTexCtx.fillRect(0, WALL_TEX_SIZE - 55, WALL_TEX_SIZE, 2);
+    function createTextureCanvas(drawFn) {
+      const c = document.createElement("canvas");
+      c.width = TEX_SIZE;
+      c.height = TEX_SIZE;
+      drawFn(c.getContext("2d"));
+      return c;
     }
-    buildCleanWallTexture();
 
-    // --- 3 Larger Sector Maps (22 cols x 15 rows) ---
+    // 1. Hallway Slate Wall Texture
+    const hallWallTex = createTextureCanvas(g => {
+      const grad = g.createLinearGradient(0, 0, 0, TEX_SIZE);
+      grad.addColorStop(0.0, "#1b1f27");
+      grad.addColorStop(0.15, "#2f3542");
+      grad.addColorStop(0.5, "#38404f");
+      grad.addColorStop(0.85, "#292e3a");
+      grad.addColorStop(1.0, "#15181f");
+      g.fillStyle = grad;
+      g.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+
+      g.fillStyle = "rgba(10, 12, 16, 0.55)";
+      g.fillRect(0, 56, TEX_SIZE, 3);
+      g.fillRect(0, TEX_SIZE - 58, TEX_SIZE, 3);
+      g.fillRect(254, 56, 3, TEX_SIZE - 114);
+
+      const trim = g.createLinearGradient(0, 96, 0, 114);
+      trim.addColorStop(0, "#12151c");
+      trim.addColorStop(0.5, "#5b677d");
+      trim.addColorStop(1, "#12151c");
+      g.fillStyle = trim;
+      g.fillRect(24, 96, TEX_SIZE - 48, 16);
+
+      g.fillStyle = "#13161d";
+      g.fillRect(0, TEX_SIZE - 55, TEX_SIZE, 55);
+    });
+
+    // 2. Interior Room Wall Texture (Clean Warm Plaster + Wood Wainscoting)
+    const roomWallTex = createTextureCanvas(g => {
+      const upper = g.createLinearGradient(0, 0, 0, 320);
+      upper.addColorStop(0, "#242220");
+      upper.addColorStop(0.5, "#3f3b36");
+      upper.addColorStop(1, "#332f2b");
+      g.fillStyle = upper;
+      g.fillRect(0, 0, TEX_SIZE, 320);
+
+      // Chair rail molding
+      g.fillStyle = "#1c1714";
+      g.fillRect(0, 316, TEX_SIZE, 14);
+      g.fillStyle = "rgba(255,255,255,0.08)";
+      g.fillRect(0, 316, TEX_SIZE, 2);
+
+      // Warm lower wood paneling
+      const wood = g.createLinearGradient(0, 330, 0, TEX_SIZE);
+      wood.addColorStop(0, "#38261b");
+      wood.addColorStop(1, "#1f140e");
+      g.fillStyle = wood;
+      g.fillRect(0, 330, TEX_SIZE, TEX_SIZE - 330);
+
+      // Clean vertical panel grooves
+      g.fillStyle = "rgba(0,0,0,0.35)";
+      for (let x = 64; x < TEX_SIZE; x += 64) {
+        g.fillRect(x, 332, 2, TEX_SIZE - 332);
+      }
+    });
+
+    // 3. Room Door Texture
+    const doorTex = createTextureCanvas(g => {
+      g.fillStyle = "#1e1612";
+      g.fillRect(0, 0, TEX_SIZE, TEX_SIZE);
+
+      // Door frame
+      g.fillStyle = "#3b2b22";
+      g.fillRect(28, 22, TEX_SIZE - 56, TEX_SIZE - 22);
+
+      // Recessed door panels
+      g.fillStyle = "#2b1f18";
+      g.fillRect(62, 54, TEX_SIZE - 124, 175);
+      g.fillRect(62, 258, TEX_SIZE - 124, 210);
+
+      // Frosted security window at top
+      const glass = g.createLinearGradient(0, 74, 0, 190);
+      glass.addColorStop(0, "#1c2833");
+      glass.addColorStop(1, "#34495e");
+      g.fillStyle = glass;
+      g.fillRect(92, 74, TEX_SIZE - 184, 115);
+
+      // Brass/steel handle
+      g.fillStyle = "#d4af37";
+      g.fillRect(TEX_SIZE - 96, 252, 26, 10);
+    });
+
+    // --- Map Legend ---
+    // 0 = Hallway Floor
+    // 1 = Hallway Slate Wall
+    // 2 = Final Sector Exit Door
+    // 3 = Room Door (Interactive, opens/closes)
+    // 4 = Interior Room Wall
+    // 5 = Room Floor (Used for room name detection)
+
     const SECTORS = [
       {
-        name: "SECTOR 1 // FLOODED LABS",
+        name: "SECTOR 1 // EAST WING",
         keysNeeded: 3,
-        playerStart: { x: 1.5, y: 1.5, angle: 0 },
-        monsterStart: { x: 19.5, y: 12.5 },
-        chaseSpeed: 3.25,
-        patrolSpeed: 1.5,
-        keys: [{ x: 9.5, y: 1.5 }, { x: 1.5, y: 13.5 }, { x: 19.5, y: 1.5 }],
-        batteries: [{ x: 10.5, y: 7.5 }, { x: 5.5, y: 11.5 }, { x: 16.5, y: 9.5 }],
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
+        monsterStart: { x: 11.0, y: 2.5 },
+        chaseSpeed: 3.2,
+        patrolSpeed: 1.45,
+        rooms: [
+          { name: "SECURITY OFFICE", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "MEDBAY WARD", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "STORAGE ROOM", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "ARCHIVE ROOM", x1: 15, y1: 9, x2: 20, y2: 13 }
+        ],
+        closets: [
+          // Security Office Closets
+          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, loot: "empty", opened: false, taken: false },
+          // Medbay Closets
+          { x: 16.5, y: 1.6, loot: "battery", opened: false, taken: false },
+          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
+          // Storage Room Closets
+          { x: 2.2, y: 12.2, loot: "empty", opened: false, taken: false },
+          { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
+          // Archive Room Closets
+          { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+        ],
+        looseItems: [
+          { x: 11.0, y: 7.5, type: "battery", taken: false }
+        ],
         map: [
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1],
-          [1,0,1,0,1,0,1,1,1,1,0,1,0,1,1,0,1,0,1,1,0,1],
-          [1,0,1,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,1],
-          [1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1,1,1,1,0,1,1],
-          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-          [1,1,1,0,1,0,1,1,1,1,0,1,1,0,1,1,1,0,1,1,0,1],
-          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,1,0,1],
-          [1,0,1,1,1,1,1,0,1,1,0,1,0,1,1,0,1,1,0,1,0,1],
-          [1,0,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,0,0,0,1],
-          [1,0,1,1,0,1,1,1,1,0,1,1,1,1,0,1,1,1,1,1,0,1],
-          [1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1],
-          [1,1,0,1,1,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,0,1],
-          [1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,0,1,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,4,4,4,4,1,0,0,1,1,0,0,1,4,4,4,4,4,4,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,4,4,4,4,4,4,1,0,0,1,1,0,0,1,4,4,4,4,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ]
       },
       {
-        name: "SECTOR 2 // CONTAINMENT MAZE",
+        name: "SECTOR 2 // RESEARCH QUARTERS",
         keysNeeded: 4,
-        playerStart: { x: 1.5, y: 13.5, angle: -Math.PI / 2 },
-        monsterStart: { x: 19.5, y: 1.5 },
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
+        monsterStart: { x: 11.0, y: 2.0 },
         chaseSpeed: 3.45,
-        patrolSpeed: 1.65,
-        keys: [{ x: 1.5, y: 1.5 }, { x: 10.5, y: 1.5 }, { x: 19.5, y: 7.5 }, { x: 10.5, y: 13.5 }],
-        batteries: [{ x: 6.5, y: 5.5 }, { x: 14.5, y: 5.5 }, { x: 5.5, y: 11.5 }, { x: 16.5, y: 11.5 }],
+        patrolSpeed: 1.6,
+        rooms: [
+          { name: "DIRECTOR SUITE", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "CHEM LAB", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "STAFF DORMS", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "LOCKER BAY", x1: 15, y1: 9, x2: 20, y2: 13 }
+        ],
+        closets: [
+          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, loot: "battery", opened: false, taken: false },
+          { x: 16.5, y: 1.6, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
+          { x: 2.2, y: 12.2, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 12.2, loot: "empty", opened: false, taken: false },
+          { x: 16.5, y: 12.2, loot: "key", opened: false, taken: false },
+          { x: 19.2, y: 10.5, loot: "battery", opened: false, taken: false }
+        ],
+        looseItems: [
+          { x: 3.5, y: 7.0, type: "battery", taken: false },
+          { x: 18.5, y: 7.0, type: "battery", taken: false }
+        ],
         map: [
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-          [1,0,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,0,1],
-          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
-          [1,0,1,0,1,1,1,1,1,0,1,0,1,1,1,1,1,0,1,0,1,1],
-          [1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,0,1],
-          [1,1,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,1,1,1,0,1],
-          [1,0,0,0,1,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-          [1,0,1,0,1,0,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1],
-          [1,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
-          [1,0,1,1,1,1,1,0,1,0,1,1,1,0,1,1,1,0,1,0,1,1],
-          [1,0,0,0,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-          [1,1,1,0,1,0,1,1,1,1,0,1,1,0,1,0,1,1,1,1,0,1],
-          [1,0,0,0,1,0,0,0,0,0,0,1,0,0,0,0,1,0,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,3,4,4,4,1,0,0,1,1,0,0,1,4,4,4,3,4,4,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,4,4,3,4,4,4,1,0,0,1,1,0,0,1,4,4,4,3,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ]
       },
       {
-        name: "SECTOR 3 // FINAL ESCAPE",
+        name: "SECTOR 3 // CONTAINMENT VAULT",
         keysNeeded: 5,
-        playerStart: { x: 1.5, y: 1.5, angle: 0 },
-        monsterStart: { x: 19.5, y: 13.5 },
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
+        monsterStart: { x: 11.0, y: 2.0 },
         chaseSpeed: 3.65,
-        patrolSpeed: 1.8,
-        keys: [
-          { x: 10.5, y: 1.5 },
-          { x: 19.5, y: 1.5 },
-          { x: 1.5, y: 7.5 },
-          { x: 19.5, y: 7.5 },
-          { x: 1.5, y: 13.5 }
+        patrolSpeed: 1.75,
+        rooms: [
+          { name: "CONTROL ROOM", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "CRYO CHAMBER", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "ARMORY CLOSET", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "REACTOR CORE", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
-        batteries: [
-          { x: 5.5, y: 3.5 },
-          { x: 15.5, y: 3.5 },
-          { x: 10.5, y: 7.5 },
-          { x: 6.5, y: 11.5 },
-          { x: 15.5, y: 11.5 }
+        closets: [
+          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, loot: "key", opened: false, taken: false },
+          { x: 16.5, y: 1.6, loot: "battery", opened: false, taken: false },
+          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
+          { x: 2.2, y: 12.2, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
+          { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+        ],
+        looseItems: [
+          { x: 11.0, y: 7.0, type: "battery", taken: false },
+          { x: 3.5, y: 7.0, type: "battery", taken: false }
         ],
         map: [
-          [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
-          [1,0,0,0,1,0,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,1],
-          [1,0,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1,1,1,0,1],
-          [1,0,1,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,0,0,1],
-          [1,0,1,1,1,0,1,0,1,1,1,0,1,0,1,0,1,0,1,1,1,1],
-          [1,0,0,0,0,0,0,0,1,0,0,0,0,0,1,0,0,0,1,0,0,1],
-          [1,1,1,0,1,1,1,0,1,0,1,1,1,1,1,1,1,0,1,0,1,1],
-          [1,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
-          [1,0,1,1,1,0,1,1,1,0,1,1,1,1,1,0,1,1,1,1,0,1],
-          [1,0,0,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,0,1],
-          [1,1,1,1,1,0,1,0,1,0,1,0,1,0,1,1,1,1,1,0,1,1],
-          [1,0,0,0,1,0,0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1],
-          [1,0,1,0,1,1,1,0,1,1,1,0,1,1,1,0,1,0,1,1,0,1],
-          [1,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,1,0,0,0,2,1],
+          [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,3,4,4,4,1,0,0,1,1,0,0,1,4,4,4,3,4,4,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+          [1,0,0,0,0,0,0,0,0,0,1,1,0,0,0,0,0,0,0,0,0,1],
+          [1,4,4,3,4,4,4,1,0,0,1,1,0,0,1,4,4,4,3,4,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,5,5,5,5,3,0,0,0,0,0,0,0,0,3,5,5,5,5,4,1],
+          [1,4,5,5,5,5,4,1,0,0,0,0,0,0,1,4,5,5,5,5,4,1],
+          [1,4,4,4,4,4,4,1,0,0,0,0,0,0,1,4,4,4,4,4,4,1],
           [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1]
         ]
       }
@@ -365,12 +502,28 @@
     let jumpscareTimer = 0;
     let pulseWaveTimer = 0;
     let keysDown = {};
-    let player, monster, sprites, keysCollected, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
+    let mapGrid = [];
+    let doorStates = {}; // "x,y" -> { open: boolean, progress: 0..1 }
+    let closets = [];
+    let sprites = [];
+    let player, monster, keysCollected, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
+    let activeInteraction = null;
 
     function loadSector(idx, preserveBattery = true) {
       sectorIndex = idx;
       const sec = SECTORS[idx];
       const prevBat = preserveBattery && player ? Math.max(35, player.battery) : 100;
+
+      // Clone map & initialize doors
+      mapGrid = sec.map.map(row => [...row]);
+      doorStates = {};
+      for (let r = 0; r < mapGrid.length; r++) {
+        for (let c = 0; c < mapGrid[0].length; c++) {
+          if (mapGrid[r][c] === 3) {
+            doorStates[`${c},${r}`] = { open: false, progress: 0 };
+          }
+        }
+      }
 
       player = {
         x: sec.playerStart.x,
@@ -392,26 +545,33 @@
         chasing: false,
         memoryTimer: 0,
         stunTimer: 0,
-        targetX: 10.5,
-        targetY: 7.5
+        targetX: 11.0,
+        targetY: 7.0
       };
 
-      sprites = [];
-      sec.keys.forEach(k => sprites.push({ x: k.x, y: k.y, type: "key", taken: false }));
-      sec.batteries.forEach(b => sprites.push({ x: b.x, y: b.y, type: "battery", taken: false }));
+      closets = sec.closets.map(c => ({ ...c, openAnim: 0 }));
+      sprites = sec.looseItems.map(it => ({ ...it }));
 
       keysCollected = 0;
       jumpscareTimer = 0;
       pulseWaveTimer = 0;
+      activeInteraction = null;
+      promptEl.style.display = "none";
       updateHUD();
-    }
-
-    function getMap() {
-      return SECTORS[sectorIndex].map;
     }
 
     function getKeysNeeded() {
       return SECTORS[sectorIndex].keysNeeded;
+    }
+
+    function getCurrentRoomName() {
+      const sec = SECTORS[sectorIndex];
+      for (const rm of sec.rooms) {
+        if (player.x >= rm.x1 && player.x <= rm.x2 + 1 && player.y >= rm.y1 && player.y <= rm.y2 + 1) {
+          return rm.name;
+        }
+      }
+      return "MAIN CORRIDOR";
     }
 
     function triggerPulse() {
@@ -427,6 +587,73 @@
         monster.memoryTimer = 0;
       }
       updateHUD();
+    }
+
+    function findLookTarget() {
+      const cos = Math.cos(player.angle);
+      const sin = Math.sin(player.angle);
+
+      // 1. Check Closets in front of player
+      for (const cl of closets) {
+        const dx = cl.x - player.x;
+        const dy = cl.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 1.65) {
+          const dot = (dx / dist) * cos + (dy / dist) * sin;
+          if (dot > 0.78) {
+            if (!cl.opened) return { type: "closet", obj: cl, label: "[R / CLICK] OPEN CLOSET" };
+            if (!cl.taken && cl.loot !== "empty") {
+              const itemName = cl.loot === "key" ? "TAKE SECURITY KEY" : "TAKE BATTERY";
+              return { type: "closetLoot", obj: cl, label: `[R / CLICK] ${itemName}` };
+            }
+          }
+        }
+      }
+
+      // 2. Check Room Doors directly ahead (1 to 1.6 tiles forward)
+      for (let step = 0.7; step <= 1.65; step += 0.3) {
+        const tx = Math.floor(player.x + cos * step);
+        const ty = Math.floor(player.y + sin * step);
+        if (mapGrid[ty] && mapGrid[ty][tx] === 3) {
+          const dState = doorStates[`${tx},${ty}`];
+          // Prevent closing a door while standing inside its doorway
+          if (Math.floor(player.x) === tx && Math.floor(player.y) === ty) return null;
+          return {
+            type: "door",
+            gx: tx,
+            gy: ty,
+            state: dState,
+            label: dState.open ? "[R / CLICK] CLOSE DOOR" : "[R / CLICK] OPEN DOOR"
+          };
+        }
+      }
+
+      return null;
+    }
+
+    function interact() {
+      if (!running || !activeInteraction) return;
+
+      if (activeInteraction.type === "door") {
+        const st = activeInteraction.state;
+        st.open = !st.open;
+        playDoorSound(st.open);
+      } else if (activeInteraction.type === "closet") {
+        const cl = activeInteraction.obj;
+        cl.opened = true;
+        playClosetCreak();
+      } else if (activeInteraction.type === "closetLoot") {
+        const cl = activeInteraction.obj;
+        cl.taken = true;
+        if (cl.loot === "key") {
+          keysCollected++;
+          playTone(660, "sine", 0.25, 0.22);
+        } else if (cl.loot === "battery") {
+          player.battery = Math.min(100, player.battery + 45);
+          playTone(440, "triangle", 0.2, 0.22);
+        }
+        updateHUD();
+      }
     }
 
     function updateHUD() {
@@ -452,40 +679,60 @@
       }
     }
 
-    function isBlocked(x, y) {
-      const map = getMap();
+    function isBlocked(x, y, isMonster = false) {
       const gx = Math.floor(x);
       const gy = Math.floor(y);
-      if (gy < 0 || gy >= map.length || gx < 0 || gx >= map[0].length) return true;
-      return map[gy][gx] === 1 || (map[gy][gx] === 2 && keysCollected < getKeysNeeded());
+      if (gy < 0 || gy >= mapGrid.length || gx < 0 || gx >= mapGrid[0].length) return true;
+      const cell = mapGrid[gy][gx];
+      if (cell === 1 || cell === 4) return true;
+      if (cell === 2 && keysCollected < getKeysNeeded()) return true;
+      if (cell === 3) {
+        const dState = doorStates[`${gx},${gy}`];
+        if (dState && !dState.open) {
+          // Chasing monster forces room doors open!
+          if (isMonster && monster.chasing) {
+            dState.open = true;
+            playDoorSound(true);
+            return false;
+          }
+          return true;
+        }
+      }
+      // Solid closet collision
+      for (const cl of closets) {
+        if (Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
+      }
+      return false;
     }
 
-    function moveWithSlide(ent, dx, dy, pad = 0.22) {
-      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad) &&
-          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad)) {
+    function moveWithSlide(ent, dx, dy, pad = 0.21, isMonster = false) {
+      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad, isMonster) &&
+          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad, isMonster)) {
         ent.x += dx;
       }
-      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad) &&
-          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad)) {
+      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad, isMonster) &&
+          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad, isMonster)) {
         ent.y += dy;
       }
     }
 
     function hasLineOfSight(x1, y1, x2, y2) {
-      const map = getMap();
       const dist = Math.hypot(x2 - x1, y2 - y1);
       const steps = Math.ceil(dist * 6);
       for (let i = 1; i < steps; i++) {
         const t = i / steps;
         const cx = Math.floor(x1 + (x2 - x1) * t);
         const cy = Math.floor(y1 + (y2 - y1) * t);
-        if (map[cy] && map[cy][cx] === 1) return false;
+        const cell = mapGrid[cy] && mapGrid[cy][cx];
+        if (cell === 1 || cell === 4) return false;
+        if (cell === 3 && !doorStates[`${cx},${cy}`].open) return false;
       }
       return true;
     }
 
     function openOverlay(mode) {
       running = false;
+      promptEl.style.display = "none";
       if (document.pointerLockElement) document.exitPointerLock();
       overlay.style.display = "flex";
 
@@ -494,20 +741,20 @@
         const nextIdx = sectorIndex + 1;
         ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
         ovTitle.style.color = "#c084fc";
-        ovDesc.innerHTML = `You made it through the exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys required, faster pursuit).`;
+        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys hidden inside room closets).`;
         startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
         startBtn.dataset.action = "nextSector";
       } else if (mode === "wonAll") {
         playSectorClear();
         ovTitle.textContent = "FACILITY ESCAPED";
         ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You survived all 3 sectors and escaped into the open air.<br><br>Want to run the full campaign again?";
+        ovDesc.innerHTML = "You searched every sector and escaped into the open air.<br><br>Want to run the full campaign again?";
         startBtn.textContent = "PLAY FULL RUN AGAIN";
         startBtn.dataset.action = "restartAll";
       } else {
         ovTitle.textContent = "IT CAUGHT YOU";
         ovTitle.style.color = "#ef4444";
-        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Fire a stun pulse (<b>E</b>) when it closes in, sprint around corners (<b>SHIFT</b>), and toggle <b>F</b> to hide.`;
+        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Fire a stun pulse (<b>E</b>) when it closes in, sprint around corners (<b>SHIFT</b>), and shut room doors behind you.`;
         startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
         startBtn.dataset.action = "retrySector";
       }
@@ -520,6 +767,18 @@
         return;
       }
       if (!running) return;
+
+      // Animate door sliding & closet opening
+      for (const key in doorStates) {
+        const d = doorStates[key];
+        const target = d.open ? 1 : 0;
+        d.progress += (target - d.progress) * Math.min(1, dt * 9);
+      }
+      for (const cl of closets) {
+        if (cl.opened && cl.openAnim < 1) {
+          cl.openAnim = Math.min(1, cl.openAnim + dt * 5);
+        }
+      }
 
       if (player.pulseCooldown > 0) player.pulseCooldown = Math.max(0, player.pulseCooldown - dt);
       if (pulseWaveTimer > 0) pulseWaveTimer = Math.max(0, pulseWaveTimer - dt);
@@ -550,7 +809,7 @@
         let vx = cos * fwd - sin * strafe;
         let vy = sin * fwd + cos * strafe;
         const len = Math.hypot(vx, vy);
-        moveWithSlide(player, (vx / len) * speed * dt, (vy / len) * speed * dt);
+        moveWithSlide(player, (vx / len) * speed * dt, (vy / len) * speed * dt, 0.21, false);
 
         bobTimer += dt * (sprinting ? 14 : 9);
         footstepTimer -= dt * (sprinting ? 3.2 : 1.9);
@@ -567,6 +826,7 @@
         if (player.battery === 0) player.flashlight = false;
       }
 
+      // Loose floor pickups
       sprites.forEach(sp => {
         if (!sp.taken && Math.hypot(player.x - sp.x, player.y - sp.y) < 0.65) {
           sp.taken = true;
@@ -580,10 +840,20 @@
         }
       });
 
-      const map = getMap();
+      // Update Room Name Banner & Interaction Prompt
+      roomBannerEl.textContent = getCurrentRoomName();
+      activeInteraction = findLookTarget();
+      if (activeInteraction) {
+        promptEl.textContent = activeInteraction.label;
+        promptEl.style.display = "block";
+      } else {
+        promptEl.style.display = "none";
+      }
+
+      // Exit check
       const gx = Math.floor(player.x);
       const gy = Math.floor(player.y);
-      if (map[gy] && map[gy][gx] === 2 && keysCollected >= getKeysNeeded()) {
+      if (mapGrid[gy] && mapGrid[gy][gx] === 2 && keysCollected >= getKeysNeeded()) {
         if (sectorIndex + 1 < SECTORS.length) {
           openOverlay("nextSector");
         } else {
@@ -592,6 +862,7 @@
         return;
       }
 
+      // Monster AI
       const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
 
       if (monster.stunTimer > 0) {
@@ -600,12 +871,12 @@
         statusUi.className = "pulse-ready";
       } else {
         const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
-        const detectRange = player.flashlight ? 7.0 : (sprinting ? 4.4 : 2.4);
+        const detectRange = player.flashlight ? 7.2 : (sprinting ? 4.5 : 2.3);
 
         if (los && dist < detectRange) {
           if (!monster.chasing) playShriek();
           monster.chasing = true;
-          monster.memoryTimer = 3.4 + sectorIndex * 0.35;
+          monster.memoryTimer = 3.5 + sectorIndex * 0.35;
           monster.targetX = player.x;
           monster.targetY = player.y;
         } else if (monster.chasing) {
@@ -618,16 +889,16 @@
         if (!monster.chasing && Math.hypot(monster.targetX - monster.x, monster.targetY - monster.y) < 0.5) {
           let rx, ry;
           do {
-            rx = Math.floor(Math.random() * (map[0].length - 2)) + 1.5;
-            ry = Math.floor(Math.random() * (map.length - 2)) + 1.5;
-          } while (isBlocked(rx, ry));
+            rx = Math.floor(Math.random() * (mapGrid[0].length - 2)) + 1.5;
+            ry = Math.floor(Math.random() * (mapGrid.length - 2)) + 1.5;
+          } while (isBlocked(rx, ry, false));
           monster.targetX = rx;
           monster.targetY = ry;
         }
 
         const mSpd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
         const mAng = Math.atan2(monster.targetY - monster.y, monster.targetX - monster.x);
-        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2);
+        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2, true);
 
         if (dist < 6.8 || monster.chasing) {
           monsterStepTimer -= dt * (monster.chasing ? 4.4 : 1.9);
@@ -688,19 +959,18 @@
         };
       }
 
-      sprites.forEach(sp => {
-        if (sp.taken || sp.type !== "key") return;
-        const pt = toRadar(sp.x, sp.y);
-        rCtx.fillStyle = "#facc15";
-        rCtx.beginPath();
-        rCtx.arc(pt.x, pt.y, 2.8, 0, Math.PI * 2);
-        rCtx.fill();
+      // Unopened or uncollected key closets blip faintly on radar
+      closets.forEach(cl => {
+        if (cl.taken) return;
+        const pt = toRadar(cl.x, cl.y);
+        rCtx.fillStyle = cl.opened && cl.loot === "key" ? "#facc15" : "rgba(192, 132, 252, 0.7)";
+        rCtx.fillRect(pt.x - 2.2, pt.y - 2.2, 4.4, 4.4);
       });
 
-      const map = getMap();
-      for (let r = 0; r < map.length; r++) {
-        for (let c = 0; c < map[0].length; c++) {
-          if (map[r][c] === 2) {
+      // Exit Door
+      for (let r = 0; r < mapGrid.length; r++) {
+        for (let c = 0; c < mapGrid[0].length; c++) {
+          if (mapGrid[r][c] === 2) {
             const pt = toRadar(c + 0.5, r + 0.5);
             rCtx.fillStyle = keysCollected >= getKeysNeeded() ? "#22c55e" : "#71717a";
             rCtx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
@@ -728,7 +998,6 @@
     function render3D() {
       const W = canvas.width;
       const H = canvas.height;
-      const map = getMap();
 
       if (jumpscareTimer > 0) {
         ctx.fillStyle = Math.random() < 0.5 ? "#7f1d1d" : "#09090b";
@@ -759,14 +1028,13 @@
         ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
         : 0;
 
-      // Smooth Architectural Roof (Ceiling) Gradient
+      // Smooth Architectural Roof & Floor
       const roofGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
       roofGrad.addColorStop(0, flicker > 0 ? "#181c24" : "#08090d");
       roofGrad.addColorStop(1, "#030305");
       ctx.fillStyle = roofGrad;
       ctx.fillRect(0, 0, W, horizonY);
 
-      // Smooth Architectural Floor Gradient
       const floorGrad = ctx.createLinearGradient(0, horizonY, 0, H);
       floorGrad.addColorStop(0, "#040406");
       floorGrad.addColorStop(1, flicker > 0 ? "#1b2029" : "#090a0e");
@@ -779,7 +1047,6 @@
       const planeX = -dirY * Math.tan(FOV / 2);
       const planeY = dirX * Math.tan(FOV / 2);
 
-      // --- Cast High-Density Clean 3D Walls (450 Rays = 2px Smooth Columns) ---
       const NUM_RAYS = 450;
       const stripW = W / NUM_RAYS;
       const zBuffer = new Array(NUM_RAYS);
@@ -812,7 +1079,7 @@
           sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
         }
 
-        let hit = 0, side = 0;
+        let hit = 0, side = 0, perpDist = 0, wallX = 0;
         while (hit === 0) {
           if (sideDistX < sideDistY) {
             sideDistX += deltaDistX;
@@ -823,10 +1090,26 @@
             mapY += stepY;
             side = 1;
           }
-          if (map[mapY] && map[mapY][mapX] > 0) hit = map[mapY][mapX];
+          const cell = mapGrid[mapY] && mapGrid[mapY][mapX];
+          if (cell === 1 || cell === 2 || cell === 4) {
+            hit = cell;
+            perpDist = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+            wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
+            wallX -= Math.floor(wallX);
+          } else if (cell === 3) {
+            // Sliding Door Ray Intersection
+            const dState = doorStates[`${mapX},${mapY}`];
+            const distToDoor = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+            let wx = side === 0 ? player.y + distToDoor * rayDirY : player.x + distToDoor * rayDirX;
+            wx -= Math.floor(wx);
+            if (wx >= dState.progress) {
+              hit = 3;
+              perpDist = distToDoor;
+              wallX = wx - dState.progress;
+            }
+          }
         }
 
-        const perpDist = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
         zBuffer[i] = perpDist;
 
         const lineHeight = H / Math.max(0.05, perpDist);
@@ -844,13 +1127,12 @@
           ctx.fillStyle = `rgb(${Math.floor(r * light)}, ${Math.floor(g * light)}, ${Math.floor(40 * light)})`;
           ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
         } else {
-          let wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
-          wallX -= Math.floor(wallX);
-          const texX = Math.min(WALL_TEX_SIZE - 1, Math.floor(wallX * WALL_TEX_SIZE));
+          const texSource = hit === 3 ? doorTex : (hit === 4 ? roomWallTex : hallWallTex);
+          const texX = Math.min(TEX_SIZE - 1, Math.floor(wallX * TEX_SIZE));
 
           ctx.drawImage(
-            wallTexCanvas,
-            texX, 0, 1, WALL_TEX_SIZE,
+            texSource,
+            texX, 0, 1, TEX_SIZE,
             i * stripW, drawStart, stripW + 0.6, lineHeight
           );
 
@@ -860,8 +1142,9 @@
         }
       }
 
-      // --- Billboards (Keys, Batteries, and Stalker Monster) ---
+      // --- Billboards: Closets, Loose Items, and Stalker Monster ---
       const renderList = [];
+      closets.forEach(cl => renderList.push({ x: cl.x, y: cl.y, kind: "closet", data: cl }));
       sprites.forEach(sp => {
         if (!sp.taken) renderList.push({ x: sp.x, y: sp.y, kind: sp.type });
       });
@@ -894,7 +1177,62 @@
         const centerFocus = Math.max(0, 1 - Math.abs(normScreen) * 2.1);
         const light = Math.min(1, flicker * centerFocus * Math.max(0, 1 - transformY / 7.5) + Math.max(0, 0.25 - transformY * 0.08));
 
-        if (obj.kind === "monster") {
+        if (obj.kind === "closet") {
+          const cl = obj.data;
+          const cW = spriteSize * 0.62;
+          const cH = spriteSize * 0.86;
+          const leftX = screenX - cW / 2;
+          const topY = H / 2 - cH * 0.38 + bobOffset;
+
+          // Closet Outer Cabinet
+          ctx.fillStyle = "#2b1d14";
+          ctx.fillRect(leftX, topY, cW, cH);
+          ctx.strokeStyle = "#140d09";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(leftX, topY, cW, cH);
+
+          if (!cl.opened) {
+            // Closed Double Wardrobe Doors
+            ctx.fillStyle = "#3a271b";
+            ctx.fillRect(leftX + 4, topY + 4, cW / 2 - 5, cH - 8);
+            ctx.fillRect(screenX + 1, topY + 4, cW / 2 - 5, cH - 8);
+
+            // Handles
+            ctx.fillStyle = "#eab308";
+            ctx.fillRect(screenX - 6, topY + cH * 0.48, 3, 10);
+            ctx.fillRect(screenX + 3, topY + cH * 0.48, 3, 10);
+          } else {
+            // Dark Interior Shelf + Swung-Open Doors on Sides
+            ctx.fillStyle = "#0d0907";
+            ctx.fillRect(leftX + 6, topY + 6, cW - 12, cH - 12);
+
+            // Shelf Divider
+            ctx.fillStyle = "#2b1d14";
+            ctx.fillRect(leftX + 6, topY + cH * 0.56, cW - 12, 4);
+
+            // Swung-open side doors
+            const doorLeafW = cW * 0.14;
+            ctx.fillStyle = "#3a271b";
+            ctx.fillRect(leftX - doorLeafW, topY + 2, doorLeafW, cH - 4);
+            ctx.fillRect(leftX + cW, topY + 2, doorLeafW, cH - 4);
+
+            // Glowing Key or Battery Inside Closet!
+            if (!cl.taken && cl.loot !== "empty") {
+              const itemR = Math.max(5, spriteSize * 0.11);
+              const itemY = topY + cH * 0.46;
+              ctx.fillStyle = cl.loot === "key" ? "#facc15" : "#38bdf8";
+              ctx.beginPath();
+              ctx.arc(screenX, itemY, itemR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          // Apply scene lighting shade over closet
+          const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
+          ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
+          ctx.fillRect(leftX - cW * 0.15, topY, cW * 1.3, cH);
+
+        } else if (obj.kind === "monster") {
           const mW = spriteSize * 0.55;
           const mH = spriteSize * 0.88;
           const topY = H / 2 - mH * 0.42 + bobOffset;
@@ -965,6 +1303,9 @@
       if (k === "e" && running) {
         triggerPulse();
       }
+      if (k === "r" && running) {
+        interact();
+      }
     });
     window.addEventListener("keyup", e => keysDown[e.key.toLowerCase()] = false);
 
@@ -975,8 +1316,11 @@
     });
 
     canvas.addEventListener("click", () => {
-      if (running && document.pointerLockElement !== canvas) {
+      if (!running) return;
+      if (document.pointerLockElement !== canvas) {
         canvas.requestPointerLock();
+      } else {
+        interact();
       }
     });
 
