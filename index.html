@@ -210,52 +210,58 @@
       [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
     }
 
-    // --- Procedural Wall Texture (64x64) ---
-    const WALL_TEX_SIZE = 64;
+    // --- High-Resolution Clean Architectural Wall Texture (512x512, Non-Pixelated) ---
+    const WALL_TEX_SIZE = 512;
     const wallTexCanvas = document.createElement("canvas");
     wallTexCanvas.width = WALL_TEX_SIZE;
     wallTexCanvas.height = WALL_TEX_SIZE;
     const wTexCtx = wallTexCanvas.getContext("2d");
 
-    function buildWallTexture() {
-      // Base industrial steel/concrete
-      wTexCtx.fillStyle = "#2b2f38";
+    function buildCleanWallTexture() {
+      // Smooth brushed architectural slate gradient
+      const baseGrad = wTexCtx.createLinearGradient(0, 0, 0, WALL_TEX_SIZE);
+      baseGrad.addColorStop(0.0, "#1c2028");
+      baseGrad.addColorStop(0.14, "#313744");
+      baseGrad.addColorStop(0.5, "#3b4252");
+      baseGrad.addColorStop(0.86, "#2c313d");
+      baseGrad.addColorStop(1.0, "#171a21");
+      wTexCtx.fillStyle = baseGrad;
       wTexCtx.fillRect(0, 0, WALL_TEX_SIZE, WALL_TEX_SIZE);
 
-      // Subtle noise speckles
-      for (let i = 0; i < 420; i++) {
-        const x = (i * 37) % WALL_TEX_SIZE;
-        const y = (i * 53) % WALL_TEX_SIZE;
-        wTexCtx.fillStyle = i % 2 === 0 ? "rgba(255,255,255,0.035)" : "rgba(0,0,0,0.08)";
-        wTexCtx.fillRect(x, y, 2, 2);
-      }
+      // Subtle horizontal sheen band
+      const sheen = wTexCtx.createLinearGradient(0, 175, 0, 260);
+      sheen.addColorStop(0, "rgba(255, 255, 255, 0)");
+      sheen.addColorStop(0.5, "rgba(255, 255, 255, 0.05)");
+      sheen.addColorStop(1, "rgba(255, 255, 255, 0)");
+      wTexCtx.fillStyle = sheen;
+      wTexCtx.fillRect(0, 175, WALL_TEX_SIZE, 85);
 
-      // Horizontal structural ribs & recessed groove
-      wTexCtx.fillStyle = "#181b21";
-      wTexCtx.fillRect(0, 0, WALL_TEX_SIZE, 5);
-      wTexCtx.fillRect(0, WALL_TEX_SIZE - 5, WALL_TEX_SIZE, 5);
-      wTexCtx.fillRect(0, 30, WALL_TEX_SIZE, 3);
+      // Clean recessed architectural seam lines
+      wTexCtx.fillStyle = "rgba(10, 12, 16, 0.55)";
+      wTexCtx.fillRect(0, 56, WALL_TEX_SIZE, 3);
+      wTexCtx.fillRect(0, WALL_TEX_SIZE - 58, WALL_TEX_SIZE, 3);
+      wTexCtx.fillRect(254, 56, 3, WALL_TEX_SIZE - 114);
 
-      // Vertical panel divider
-      wTexCtx.fillStyle = "#14171c";
-      wTexCtx.fillRect(31, 0, 2, WALL_TEX_SIZE);
+      // Crisp highlight edge beside seam
+      wTexCtx.fillStyle = "rgba(255, 255, 255, 0.07)";
+      wTexCtx.fillRect(0, 59, WALL_TEX_SIZE, 2);
+      wTexCtx.fillRect(257, 56, 2, WALL_TEX_SIZE - 114);
 
-      // Rivets along top and bottom plates
-      wTexCtx.fillStyle = "#525866";
-      for (let rx = 7; rx < WALL_TEX_SIZE; rx += 12) {
-        wTexCtx.fillRect(rx, 8, 2, 2);
-        wTexCtx.fillRect(rx, WALL_TEX_SIZE - 10, 2, 2);
-      }
+      // Sleek recessed glass/light trim strip along upper wall
+      const trimGrad = wTexCtx.createLinearGradient(0, 96, 0, 114);
+      trimGrad.addColorStop(0, "#12151c");
+      trimGrad.addColorStop(0.5, "#5b677d");
+      trimGrad.addColorStop(1, "#12151c");
+      wTexCtx.fillStyle = trimGrad;
+      wTexCtx.fillRect(24, 96, WALL_TEX_SIZE - 48, 16);
 
-      // Vent grate detail on right panel
-      wTexCtx.fillStyle = "#111318";
-      wTexCtx.fillRect(38, 13, 18, 12);
-      wTexCtx.fillStyle = "#3f4552";
-      for (let vy = 15; vy <= 22; vy += 3) {
-        wTexCtx.fillRect(40, vy, 14, 1);
-      }
+      // Clean dark baseboard molding
+      wTexCtx.fillStyle = "#13161d";
+      wTexCtx.fillRect(0, WALL_TEX_SIZE - 55, WALL_TEX_SIZE, 55);
+      wTexCtx.fillStyle = "rgba(255, 255, 255, 0.06)";
+      wTexCtx.fillRect(0, WALL_TEX_SIZE - 55, WALL_TEX_SIZE, 2);
     }
-    buildWallTexture();
+    buildCleanWallTexture();
 
     // --- 3 Larger Sector Maps (22 cols x 15 rows) ---
     const SECTORS = [
@@ -749,10 +755,22 @@
       const bobOffset = Math.sin(bobTimer) * 8;
       const horizonY = H / 2 + bobOffset;
 
-      // Base dark floor & roof
-      ctx.fillStyle = "#050508";
+      const flicker = player.flashlight && player.battery > 0
+        ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
+        : 0;
+
+      // Smooth Architectural Roof (Ceiling) Gradient
+      const roofGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      roofGrad.addColorStop(0, flicker > 0 ? "#181c24" : "#08090d");
+      roofGrad.addColorStop(1, "#030305");
+      ctx.fillStyle = roofGrad;
       ctx.fillRect(0, 0, W, horizonY);
-      ctx.fillStyle = "#0b0b10";
+
+      // Smooth Architectural Floor Gradient
+      const floorGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+      floorGrad.addColorStop(0, "#040406");
+      floorGrad.addColorStop(1, flicker > 0 ? "#1b2029" : "#090a0e");
+      ctx.fillStyle = floorGrad;
       ctx.fillRect(0, horizonY, W, H - horizonY);
 
       const FOV = Math.PI / 3;
@@ -761,60 +779,8 @@
       const planeX = -dirY * Math.tan(FOV / 2);
       const planeY = dirX * Math.tan(FOV / 2);
 
-      const flicker = player.flashlight && player.battery > 0
-        ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
-        : 0;
-
-      // --- 3D Roof & Floor Perspective Grid Strips ---
-      const rayDirX0 = dirX - planeX;
-      const rayDirY0 = dirY - planeY;
-      const rayDirX1 = dirX + planeX;
-      const rayDirY1 = dirY + planeY;
-      const posZ = 0.5 * H;
-
-      for (let y = 16; y < H / 2 - 4; y += 6) {
-        const p = (H / 2) - y;
-        const rowDist = posZ / p;
-        if (rowDist > 8.5) continue;
-
-        const ceilStepX = rowDist * (rayDirX1 - rayDirX0) / W;
-        const ceilStepY = rowDist * (rayDirY1 - rayDirY0) / W;
-        let ceilX = player.x + rowDist * rayDirX0;
-        let ceilY = player.y + rowDist * rayDirY0;
-
-        // Ceiling (roof) above horizon
-        const roofY = horizonY - p;
-        for (let x = 0; x < W; x += 12) {
-          const beamX = Math.abs((ceilX % 1) - 0.5) < 0.07;
-          const beamY = Math.abs((ceilY % 1) - 0.5) < 0.07;
-          const centerFocus = Math.max(0, 1 - Math.abs((x / W) - 0.5) * 2.0);
-          const glow = Math.min(1, flicker * centerFocus * Math.max(0, 1 - rowDist / 7.5) * 0.65 + Math.max(0, 0.16 - rowDist * 0.05));
-
-          if (beamX || beamY) {
-            const v = Math.floor(110 * glow);
-            ctx.fillStyle = `rgb(${v}, ${v}, ${Math.floor(v * 1.15)})`;
-            ctx.fillRect(x, roofY, 12, 6);
-          } else if (glow > 0.04) {
-            const v = Math.floor(42 * glow);
-            ctx.fillStyle = `rgb(${v}, ${v}, ${Math.floor(v * 1.1)})`;
-            ctx.fillRect(x, roofY, 12, 6);
-          }
-
-          // Floor grid below horizon
-          const floorY = horizonY + p;
-          if (floorY < H && (beamX || beamY) && glow > 0.04) {
-            const fv = Math.floor(55 * glow);
-            ctx.fillStyle = `rgb(${fv}, ${fv}, ${Math.floor(fv * 1.1)})`;
-            ctx.fillRect(x, floorY, 12, 6);
-          }
-
-          ceilX += ceilStepX * 12;
-          ceilY += ceilStepY * 12;
-        }
-      }
-
-      // --- Cast Textured 3D Walls ---
-      const NUM_RAYS = 225;
+      // --- Cast High-Density Clean 3D Walls (450 Rays = 2px Smooth Columns) ---
+      const NUM_RAYS = 450;
       const stripW = W / NUM_RAYS;
       const zBuffer = new Array(NUM_RAYS);
 
@@ -868,15 +834,15 @@
 
         const centerFocus = Math.max(0, 1 - Math.abs(rayScreenPos) * 2.1);
         const beamLight = flicker * centerFocus * Math.max(0, 1 - perpDist / 7.5);
-        const ambientLight = Math.max(0, 0.22 - perpDist * 0.08);
-        const light = Math.min(1, beamLight + ambientLight) * (side === 1 ? 0.78 : 1);
+        const ambientLight = Math.max(0, 0.24 - perpDist * 0.08);
+        const light = Math.min(1, beamLight + ambientLight) * (side === 1 ? 0.82 : 1);
 
         if (hit === 2) {
           const unlocked = keysCollected >= getKeysNeeded();
           const r = unlocked ? 25 : 170;
           const g = unlocked ? 185 : 30;
           ctx.fillStyle = `rgb(${Math.floor(r * light)}, ${Math.floor(g * light)}, ${Math.floor(40 * light)})`;
-          ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
+          ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
         } else {
           let wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
           wallX -= Math.floor(wallX);
@@ -885,13 +851,12 @@
           ctx.drawImage(
             wallTexCanvas,
             texX, 0, 1, WALL_TEX_SIZE,
-            i * stripW, drawStart, stripW + 1, lineHeight
+            i * stripW, drawStart, stripW + 0.6, lineHeight
           );
 
-          // Darkness overlay over textured column
-          const darkness = Math.max(0, Math.min(0.97, 1 - light * 1.15));
+          const darkness = Math.max(0, Math.min(0.97, 1 - light * 1.18));
           ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
-          ctx.fillRect(i * stripW, drawStart, stripW + 1, lineHeight);
+          ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
         }
       }
 
