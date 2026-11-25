@@ -243,24 +243,20 @@
       color: #7dd3fc;
     }
 
-    /* --- Scrollable Mobile & Desktop Overlay --- */
+    /* --- Stable Mobile & Desktop Overlay --- */
     #overlay {
       position: absolute;
       inset: 0;
-      background: rgba(4, 4, 6, 0.95);
+      background: rgba(4, 4, 6, 0.96);
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       text-align: center;
-      padding: 16px 18px 24px;
-      overflow-y: auto;
-      -webkit-overflow-scrolling: touch;
-      touch-action: pan-y;
+      padding: 16px 18px;
       z-index: 20;
     }
     #overlay h1 {
-      margin-top: auto;
       font-size: clamp(1.4rem, 5vw, 2.4rem);
       color: #ef4444;
       letter-spacing: 4px;
@@ -275,7 +271,6 @@
       font-size: clamp(0.75rem, 3vw, 0.94rem);
     }
     #start-btn {
-      margin-bottom: auto;
       flex-shrink: 0;
       background: #ef4444;
       color: #040406;
@@ -843,6 +838,7 @@
     let sectorIndex = 0;
     let running = false;
     let levelFinished = false;
+    let pendingOverlayMode = null;
     let startingLock = false;
     let jumpscareTimer = 0;
     let pulseWaveTimer = 0;
@@ -901,6 +897,7 @@
       keysCollected = 0;
       isHiding = false;
       levelFinished = false;
+      pendingOverlayMode = null;
       jumpscareTimer = 0;
       pulseWaveTimer = 0;
       activeInteraction = null;
@@ -1106,8 +1103,6 @@
       if (document.pointerLockElement && document.exitPointerLock) {
         try { document.exitPointerLock(); } catch (_) {}
       }
-      overlay.style.display = "flex";
-      overlay.scrollTop = 0;
 
       if (mode === "nextSector") {
         playSectorClear();
@@ -1131,9 +1126,18 @@
         startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
         startBtn.dataset.action = "retrySector";
       }
+
+      overlay.style.display = "flex";
     }
 
     function update(dt) {
+      if (pendingOverlayMode) {
+        const m = pendingOverlayMode;
+        pendingOverlayMode = null;
+        openOverlay(m);
+        return;
+      }
+
       if (jumpscareTimer > 0) {
         jumpscareTimer -= dt;
         if (jumpscareTimer <= 0) openOverlay("caught");
@@ -1238,11 +1242,8 @@
       const gx = Math.floor(player.x);
       const gy = Math.floor(player.y);
       if (mapGrid[gy] && mapGrid[gy][gx] === 2 && keysCollected >= getKeysNeeded()) {
-        if (sectorIndex + 1 < SECTORS.length) {
-          openOverlay("nextSector");
-        } else {
-          openOverlay("wonAll");
-        }
+        running = false;
+        pendingOverlayMode = (sectorIndex + 1 < SECTORS.length) ? "nextSector" : "wonAll";
         return;
       }
 
@@ -1270,11 +1271,12 @@
         }
 
         if (!monster.chasing && Math.hypot(monster.targetX - monster.x, monster.targetY - monster.y) < 0.5) {
-          let rx, ry;
+          let rx, ry, tries = 0;
           do {
             rx = Math.floor(Math.random() * (mapGrid[0].length - 2)) + 1.5;
             ry = Math.floor(Math.random() * (mapGrid.length - 2)) + 1.5;
-          } while (isBlocked(rx, ry, false));
+            tries++;
+          } while (isBlocked(rx, ry, false) && tries < 60);
           monster.targetX = rx;
           monster.targetY = ry;
         }
@@ -1462,8 +1464,9 @@
           sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
         }
 
-        let hit = 0, side = 0, perpDist = 0, wallX = 0;
-        while (hit === 0) {
+        let hit = 0, side = 0, perpDist = 0, wallX = 0, guard = 0;
+        while (hit === 0 && guard < 120) {
+          guard++;
           if (sideDistX < sideDistY) {
             sideDistX += deltaDistX;
             mapX += stepX;
@@ -1474,7 +1477,10 @@
             side = 1;
           }
           const cell = mapGrid[mapY] && mapGrid[mapY][mapX];
-          if (cell === 1 || cell === 2 || cell === 4) {
+          if (cell === undefined) {
+            hit = 1;
+            perpDist = 10;
+          } else if (cell === 1 || cell === 2 || cell === 4) {
             hit = cell;
             perpDist = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
             wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
@@ -1492,14 +1498,15 @@
           }
         }
 
-        zBuffer[i] = perpDist;
+        const safeDist = Math.max(0.18, perpDist);
+        zBuffer[i] = safeDist;
 
-        const lineHeight = H / Math.max(0.05, perpDist);
+        const lineHeight = Math.min(H * 3.5, H / safeDist);
         const drawStart = (H - lineHeight) / 2 + bobOffset;
 
         const centerFocus = Math.max(0, 1 - Math.abs(rayScreenPos) * 2.1);
-        const beamLight = flicker * centerFocus * Math.max(0, 1 - perpDist / 7.5);
-        const ambientLight = Math.max(0, 0.24 - perpDist * 0.08);
+        const beamLight = flicker * centerFocus * Math.max(0, 1 - safeDist / 7.5);
+        const ambientLight = Math.max(0, 0.24 - safeDist * 0.08);
         const light = Math.min(1, beamLight + ambientLight) * (side === 1 ? 0.82 : 1);
 
         if (hit === 2) {
@@ -1510,7 +1517,7 @@
           ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
         } else {
           const texSource = hit === 3 ? doorTex : (hit === 4 ? roomWallTex : hallWallTex);
-          const texX = Math.min(TEX_SIZE - 1, Math.floor(wallX * TEX_SIZE));
+          const texX = Math.min(TEX_SIZE - 1, Math.max(0, Math.floor(wallX * TEX_SIZE)));
 
           ctx.drawImage(
             texSource,
@@ -1550,7 +1557,7 @@
         if (transformY <= 0.15) return;
 
         const screenX = (W / 2) * (1 + transformX / transformY);
-        const spriteSize = Math.abs(H / transformY);
+        const spriteSize = Math.min(H * 3, Math.abs(H / transformY));
         const rayIdx = Math.floor((screenX / W) * NUM_RAYS);
 
         if (rayIdx < 0 || rayIdx >= NUM_RAYS || transformY >= zBuffer[rayIdx]) return;
