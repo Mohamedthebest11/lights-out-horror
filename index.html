@@ -174,45 +174,49 @@
       margin-left: -24px;
       margin-top: -24px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, rgba(244, 244, 245, 0.85), rgba(161, 161, 170, 0.55));
-      border: 1px solid rgba(255, 255, 255, 0.65);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
-      pointer-events: none;
-    }
-    #mobile-buttons {
+     #overlay {
       position: absolute;
-      right: 18px;
-      bottom: 20px;
-      display: grid;
-      grid-template-columns: repeat(2, 66px);
-      gap: 10px;
-      pointer-events: auto;
-    }
-    .m-btn {
-      width: 66px;
-      height: 54px;
-      border-radius: 10px;
-      background: rgba(18, 18, 24, 0.68);
-      border: 1.5px solid rgba(255, 255, 255, 0.28);
-      color: #f4f4f5;
-      font-family: inherit;
-      font-size: 0.72rem;
-      font-weight: bold;
-      letter-spacing: 0.5px;
+      inset: 0;
+      background: rgba(4, 4, 6, 0.95);
       display: flex;
+      flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       text-align: center;
-      padding: 4px;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+      padding: 18px 16px 24px;
+      overflow-y: auto;
+      touch-action: pan-y;
+      z-index: 10;
     }
-    .m-btn:active, .m-btn.pressed {
-      background: rgba(239, 68, 68, 0.72);
-      border-color: #ef4444;
-      transform: scale(0.95);
+    #overlay h1 {
+      margin-top: auto;
+      font-size: clamp(1.35rem, 5vw, 2.4rem);
+      color: #ef4444;
+      letter-spacing: 3px;
+      margin-bottom: 10px;
+      text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
     }
-    #btn-interact {
-      border-color: rgba(250, 204, 21, 0.6);
+    #overlay p {
+      max-width: 610px;
+      line-height: 1.45;
+      color: #a1a1aa;
+      margin-bottom: 16px;
+      font-size: clamp(0.75rem, 3.2vw, 0.94rem);
+    }
+    #start-btn {
+      margin-bottom: auto;
+      flex-shrink: 0;
+      background: #ef4444;
+      color: #040406;
+      border: 1px solid #ef4444;
+      padding: 11px 22px;
+      font-family: inherit;
+      font-weight: bold;
+      font-size: clamp(0.82rem, 3.5vw, 1.05rem);
+      letter-spacing: 1.5px;
+      cursor: pointer;
+      border-radius: 4px;
+    }
       color: #fef08a;
     }
     #btn-pulse {
