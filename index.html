@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LIGHTS OUT 3D // Mobile & Desktop</title>
+  <title>LIGHTS OUT 3D // Full Facility</title>
   <style>
     * {
       box-sizing: border-box;
@@ -174,7 +174,54 @@
       margin-left: -24px;
       margin-top: -24px;
       border-radius: 50%;
-     #overlay {
+      background: radial-gradient(circle at 35% 35%, rgba(244, 244, 245, 0.85), rgba(161, 161, 170, 0.55));
+      border: 1px solid rgba(255, 255, 255, 0.65);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+      pointer-events: none;
+    }
+    #mobile-buttons {
+      position: absolute;
+      right: 18px;
+      bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(2, 66px);
+      gap: 10px;
+      pointer-events: auto;
+    }
+    .m-btn {
+      width: 66px;
+      height: 54px;
+      border-radius: 10px;
+      background: rgba(18, 18, 24, 0.68);
+      border: 1.5px solid rgba(255, 255, 255, 0.28);
+      color: #f4f4f5;
+      font-family: inherit;
+      font-size: 0.72rem;
+      font-weight: bold;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 4px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+    }
+    .m-btn:active, .m-btn.pressed {
+      background: rgba(239, 68, 68, 0.72);
+      border-color: #ef4444;
+      transform: scale(0.95);
+    }
+    #btn-interact {
+      border-color: rgba(250, 204, 21, 0.6);
+      color: #fef08a;
+    }
+    #btn-pulse {
+      border-color: rgba(56, 189, 248, 0.6);
+      color: #7dd3fc;
+    }
+
+    /* --- Scrollable Mobile-Safe Overlay --- */
+    #overlay {
       position: absolute;
       inset: 0;
       background: rgba(4, 4, 6, 0.95);
@@ -216,55 +263,11 @@
       letter-spacing: 1.5px;
       cursor: pointer;
       border-radius: 4px;
-    }
-      color: #fef08a;
-    }
-    #btn-pulse {
-      border-color: rgba(56, 189, 248, 0.6);
-      color: #7dd3fc;
-    }
-
-    #overlay {
-      position: absolute;
-      inset: 0;
-      background: rgba(4, 4, 6, 0.93);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      text-align: center;
-      padding: 24px;
-      z-index: 10;
-    }
-    #overlay h1 {
-      font-size: clamp(1.6rem, 4.5vw, 2.4rem);
-      color: #ef4444;
-      letter-spacing: 4px;
-      margin-bottom: 12px;
-      text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
-    }
-    #overlay p {
-      max-width: 610px;
-      line-height: 1.55;
-      color: #a1a1aa;
-      margin-bottom: 20px;
-      font-size: clamp(0.82rem, 2.2vw, 0.94rem);
-    }
-    #start-btn {
-      background: #18181b;
-      color: #f4f4f5;
-      border: 1px solid #ef4444;
-      padding: 12px 26px;
-      font-family: inherit;
-      font-size: clamp(0.9rem, 2.4vw, 1.05rem);
-      letter-spacing: 2px;
-      cursor: pointer;
       transition: 0.2s;
     }
     #start-btn:hover {
-      background: #ef4444;
-      color: #040406;
-      font-weight: bold;
+      background: #f87171;
+      border-color: #f87171;
     }
     #controls {
       width: min(900px, 100%);
@@ -363,7 +366,7 @@
     // --- Virtual Joystick & Touch Look State ---
     const joyBase = document.getElementById("joy-base");
     const joyStick = document.getElementById("joy-stick");
-    const joyState = { active: false, id: null, x: 0, y: 0 }; // x = strafe (-1..1), y = forward (-1..1)
+    const joyState = { active: false, id: null, x: 0, y: 0 };
     const lookTouch = { active: false, id: null, lastX: 0 };
     let touchSprinting = false;
 
@@ -376,7 +379,7 @@
 
       joyStick.style.transform = `translate(${kx}px, ${ky}px)`;
       joyState.x = kx / maxR;
-      joyState.y = -ky / maxR; // Up on screen = positive forward
+      joyState.y = -ky / maxR;
     }
 
     function resetJoystick() {
@@ -425,12 +428,10 @@
     joyBase.addEventListener("touchend", handleJoyEnd);
     joyBase.addEventListener("touchcancel", handleJoyEnd);
 
-    // Touch Camera Look on Right Side of Screen
     wrap.addEventListener("touchstart", e => {
       if (!running) return;
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        // Ignore touches on buttons or joystick
         if (t.target.closest("#joy-base") || t.target.closest("#mobile-buttons") || t.target.closest("#touch-toggle")) continue;
         if (!lookTouch.active) {
           lookTouch.active = true;
@@ -463,7 +464,6 @@
     wrap.addEventListener("touchend", handleLookEnd);
     wrap.addEventListener("touchcancel", handleLookEnd);
 
-    // Mobile Action Buttons
     const btnInteract = document.getElementById("btn-interact");
     const btnSprint = document.getElementById("btn-sprint");
     const btnLight = document.getElementById("btn-light");
@@ -795,270 +795,4 @@
     let player, monster, keysCollected, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
     let activeInteraction = null;
 
-    function loadSector(idx, preserveBattery = true) {
-      sectorIndex = idx;
-      const sec = SECTORS[idx];
-      const prevBat = preserveBattery && player ? Math.max(35, player.battery) : 100;
-
-      mapGrid = sec.map.map(row => [...row]);
-      doorStates = {};
-      for (let r = 0; r < mapGrid.length; r++) {
-        for (let c = 0; c < mapGrid[0].length; c++) {
-          if (mapGrid[r][c] === 3) {
-            doorStates[`${c},${r}`] = { open: false, progress: 0 };
-          }
-        }
-      }
-
-      player = {
-        x: sec.playerStart.x,
-        y: sec.playerStart.y,
-        angle: sec.playerStart.angle,
-        walkSpeed: 2.45,
-        sprintSpeed: 3.95,
-        stamina: 100,
-        flashlight: true,
-        battery: prevBat,
-        pulseCooldown: 0
-      };
-
-      monster = {
-        x: sec.monsterStart.x,
-        y: sec.monsterStart.y,
-        patrolSpeed: sec.patrolSpeed,
-        chaseSpeed: sec.chaseSpeed,
-        chasing: false,
-        memoryTimer: 0,
-        stunTimer: 0,
-        targetX: 11.0,
-        targetY: 7.0
-      };
-
-      closets = sec.closets.map(c => ({ ...c, openAnim: 0 }));
-      sprites = sec.looseItems.map(it => ({ ...it }));
-
-      keysCollected = 0;
-      jumpscareTimer = 0;
-      pulseWaveTimer = 0;
-      activeInteraction = null;
-      promptEl.style.display = "none";
-      resetJoystick();
-      touchSprinting = false;
-      btnSprint.classList.remove("pressed");
-      updateHUD();
-    }
-
-    function getKeysNeeded() {
-      return SECTORS[sectorIndex].keysNeeded;
-    }
-
-    function getCurrentRoomName() {
-      const sec = SECTORS[sectorIndex];
-      for (const rm of sec.rooms) {
-        if (player.x >= rm.x1 && player.x <= rm.x2 + 1 && player.y >= rm.y1 && player.y <= rm.y2 + 1) {
-          return rm.name;
-        }
-      }
-      return "MAIN CORRIDOR";
-    }
-
-    function triggerPulse() {
-      if (!running || player.pulseCooldown > 0) return;
-      player.pulseCooldown = 10;
-      pulseWaveTimer = 0.65;
-      playPulseSound();
-
-      const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
-      if (dist < 6.5) {
-        monster.stunTimer = 2.6;
-        monster.chasing = false;
-        monster.memoryTimer = 0;
-      }
-      updateHUD();
-    }
-
-    function findLookTarget() {
-      const cos = Math.cos(player.angle);
-      const sin = Math.sin(player.angle);
-
-      for (const cl of closets) {
-        const dx = cl.x - player.x;
-        const dy = cl.y - player.y;
-        const dist = Math.hypot(dx, dy);
-        if (dist < 1.65) {
-          const dot = (dx / dist) * cos + (dy / dist) * sin;
-          if (dot > 0.78) {
-            if (!cl.opened) return { type: "closet", obj: cl, label: "OPEN CLOSET" };
-            if (!cl.taken && cl.loot !== "empty") {
-              const itemName = cl.loot === "key" ? "TAKE SECURITY KEY" : "TAKE BATTERY";
-              return { type: "closetLoot", obj: cl, label: itemName };
-            }
-          }
-        }
-      }
-
-      for (let step = 0.7; step <= 1.65; step += 0.3) {
-        const tx = Math.floor(player.x + cos * step);
-        const ty = Math.floor(player.y + sin * step);
-        if (mapGrid[ty] && mapGrid[ty][tx] === 3) {
-          const dState = doorStates[`${tx},${ty}`];
-          if (Math.floor(player.x) === tx && Math.floor(player.y) === ty) return null;
-          return {
-            type: "door",
-            gx: tx,
-            gy: ty,
-            state: dState,
-            label: dState.open ? "CLOSE DOOR" : "OPEN DOOR"
-          };
-        }
-      }
-
-      return null;
-    }
-
-    function interact() {
-      if (!running || !activeInteraction) return;
-
-      if (activeInteraction.type === "door") {
-        const st = activeInteraction.state;
-        st.open = !st.open;
-        playDoorSound(st.open);
-      } else if (activeInteraction.type === "closet") {
-        const cl = activeInteraction.obj;
-        cl.opened = true;
-        playClosetCreak();
-      } else if (activeInteraction.type === "closetLoot") {
-        const cl = activeInteraction.obj;
-        cl.taken = true;
-        if (cl.loot === "key") {
-          keysCollected++;
-          playTone(660, "sine", 0.25, 0.22);
-        } else if (cl.loot === "battery") {
-          player.battery = Math.min(100, player.battery + 45);
-          playTone(440, "triangle", 0.2, 0.22);
-        }
-        updateHUD();
-      }
-    }
-
-    function updateHUD() {
-      const needed = getKeysNeeded();
-      secUi.textContent = `${sectorIndex + 1}/${SECTORS.length}`;
-      keysUi.textContent = `${keysCollected}/${needed}`;
-      keysUi.className = keysCollected >= needed ? "good" : "warn";
-
-      const b = Math.ceil(player.battery);
-      batUi.textContent = `${b}%`;
-      batUi.className = b > 40 ? "good" : b > 15 ? "warn" : "danger";
-
-      const s = Math.ceil(player.stamina);
-      stamUi.textContent = `${s}%`;
-      stamUi.className = s > 40 ? "good" : s > 15 ? "warn" : "danger";
-
-      if (player.pulseCooldown > 0) {
-        pulseUi.textContent = `${player.pulseCooldown.toFixed(1)}s`;
-        pulseUi.className = "warn";
-      } else {
-        pulseUi.textContent = "READY";
-        pulseUi.className = "pulse-ready";
-      }
-    }
-
-    function isBlocked(x, y, isMonster = false) {
-      const gx = Math.floor(x);
-      const gy = Math.floor(y);
-      if (gy < 0 || gy >= mapGrid.length || gx < 0 || gx >= mapGrid[0].length) return true;
-      const cell = mapGrid[gy][gx];
-      if (cell === 1 || cell === 4) return true;
-      if (cell === 2 && keysCollected < getKeysNeeded()) return true;
-      if (cell === 3) {
-        const dState = doorStates[`${gx},${gy}`];
-        if (dState && !dState.open) {
-          if (isMonster && monster.chasing) {
-            dState.open = true;
-            playDoorSound(true);
-            return false;
-          }
-          return true;
-        }
-      }
-      for (const cl of closets) {
-        if (Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
-      }
-      return false;
-    }
-
-    function moveWithSlide(ent, dx, dy, pad = 0.21, isMonster = false) {
-      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad, isMonster) &&
-          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad, isMonster)) {
-        ent.x += dx;
-      }
-      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad, isMonster) &&
-          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad, isMonster)) {
-        ent.y += dy;
-      }
-    }
-
-    function hasLineOfSight(x1, y1, x2, y2) {
-      const dist = Math.hypot(x2 - x1, y2 - y1);
-      const steps = Math.ceil(dist * 6);
-      for (let i = 1; i < steps; i++) {
-        const t = i / steps;
-        const cx = Math.floor(x1 + (x2 - x1) * t);
-        const cy = Math.floor(y1 + (y2 - y1) * t);
-        const cell = mapGrid[cy] && mapGrid[cy][cx];
-        if (cell === 1 || cell === 4) return false;
-        if (cell === 3 && !doorStates[`${cx},${cy}`].open) return false;
-      }
-      return true;
-    }
-
-    function openOverlay(mode) {
-      running = false;
-      promptEl.style.display = "none";
-      resetJoystick();
-      touchSprinting = false;
-      btnSprint.classList.remove("pressed");
-      if (document.pointerLockElement) document.exitPointerLock();
-      overlay.style.display = "flex";
-
-      if (mode === "nextSector") {
-        playSectorClear();
-        const nextIdx = sectorIndex + 1;
-        ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
-        ovTitle.style.color = "#c084fc";
-        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys hidden inside room closets).`;
-        startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
-        startBtn.dataset.action = "nextSector";
-      } else if (mode === "wonAll") {
-        playSectorClear();
-        ovTitle.textContent = "FACILITY ESCAPED";
-        ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You searched every sector and escaped into the open air.<br><br>Want to run the full campaign again?";
-        startBtn.textContent = "PLAY FULL RUN AGAIN";
-        startBtn.dataset.action = "restartAll";
-      } else {
-        ovTitle.textContent = "IT CAUGHT YOU";
-        ovTitle.style.color = "#ef4444";
-        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Fire a stun pulse when it closes in, sprint around corners, and shut room doors behind you.`;
-        startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
-        startBtn.dataset.action = "retrySector";
-      }
-    }
-
-    function update(dt) {
-      if (jumpscareTimer > 0) {
-        jumpscareTimer -= dt;
-        if (jumpscareTimer <= 0) openOverlay("caught");
-        return;
-      }
-      if (!running) return;
-
-      for (const key in doorStates) {
-        const d = doorStates[key];
-        const target = d.open ? 1 : 0;
-        d.progress += (target - d.progress) * Math.min(1, dt * 9);
-      }
-      for (const cl of closets) {
-        if (cl.opened && cl.openAnim < 1) {
-          cl.openAnim = Math.min
+    function loadSector(idx,
