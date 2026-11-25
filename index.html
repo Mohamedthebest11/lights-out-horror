@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LIGHTS OUT 3D // Full Facility</title>
+  <title>LIGHTS OUT 3D // Full Facility & Mobile</title>
   <style>
     * {
       box-sizing: border-box;
@@ -11,7 +11,7 @@
       padding: 0;
       user-select: none;
       -webkit-user-select: none;
-      touch-action: none;
+      -webkit-tap-highlight-color: transparent;
     }
     body {
       background: #040406;
@@ -25,6 +25,7 @@
       min-height: 100dvh;
       overflow: hidden;
       padding: 6px;
+      touch-action: none;
     }
     #hud {
       width: min(900px, 100%);
@@ -37,7 +38,7 @@
       background: #0c0c10;
       border: 1px solid #27272a;
       border-bottom: none;
-      font-size: clamp(0.72rem, 2vw, 0.88rem);
+      font-size: clamp(0.7rem, 2vw, 0.88rem);
       letter-spacing: 0.6px;
     }
     .danger { color: #ef4444; font-weight: bold; }
@@ -45,6 +46,8 @@
     .warn { color: #eab308; }
     .sector-tag { color: #c084fc; font-weight: bold; }
     .pulse-ready { color: #38bdf8; font-weight: bold; }
+    .hide-tag { color: #a78bfa; font-weight: bold; }
+
     #wrap {
       position: relative;
       width: min(900px, 100%);
@@ -71,15 +74,16 @@
       border-radius: 50%;
       transform: translate(-50%, -50%);
       pointer-events: none;
+      z-index: 4;
     }
     #prompt {
       position: absolute;
-      top: 56%;
+      top: 57%;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 10, 14, 0.88);
-      border: 1px solid rgba(255, 255, 255, 0.28);
-      color: #f4f4f5;
+      background: rgba(10, 10, 14, 0.9);
+      border: 1px solid rgba(250, 204, 21, 0.45);
+      color: #fef08a;
       padding: 6px 14px;
       font-size: clamp(0.72rem, 2vw, 0.85rem);
       letter-spacing: 1px;
@@ -89,16 +93,33 @@
       z-index: 6;
       white-space: nowrap;
     }
+    #toast {
+      position: absolute;
+      bottom: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(15, 15, 22, 0.9);
+      border: 1px solid rgba(192, 132, 252, 0.45);
+      color: #e9d5ff;
+      padding: 5px 12px;
+      font-size: clamp(0.68rem, 1.8vw, 0.8rem);
+      border-radius: 4px;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.25s;
+      z-index: 6;
+      white-space: nowrap;
+    }
     #room-banner {
       position: absolute;
       top: 12px;
       left: 14px;
-      background: rgba(10, 10, 14, 0.72);
+      background: rgba(10, 10, 14, 0.78);
       border-left: 3px solid #c084fc;
       padding: 4px 10px;
-      font-size: clamp(0.7rem, 1.9vw, 0.82rem);
-      color: #d4d4d8;
-      letter-spacing: 1.4px;
+      font-size: clamp(0.68rem, 1.9vw, 0.82rem);
+      color: #e4e4e7;
+      letter-spacing: 1.3px;
       pointer-events: none;
       z-index: 5;
     }
@@ -106,16 +127,17 @@
       position: absolute;
       top: 10px;
       right: 12px;
-      background: rgba(18, 18, 24, 0.78);
+      background: rgba(18, 18, 24, 0.85);
       color: #a1a1aa;
       border: 1px solid #3f3f46;
-      padding: 4px 9px;
+      padding: 5px 10px;
       font-family: inherit;
       font-size: 0.7rem;
       letter-spacing: 1px;
       cursor: pointer;
       z-index: 8;
       border-radius: 4px;
+      touch-action: manipulation;
     }
     #touch-toggle.active {
       color: #22c55e;
@@ -128,7 +150,7 @@
       width: clamp(82px, 13vw, 112px);
       height: clamp(82px, 13vw, 112px);
       border-radius: 50%;
-      background: rgba(8, 12, 10, 0.78);
+      background: rgba(8, 12, 10, 0.8);
       border: 1px solid rgba(34, 197, 94, 0.45);
       box-shadow: 0 0 18px rgba(0, 0, 0, 0.85);
       pointer-events: none;
@@ -138,8 +160,8 @@
       top: 42px;
       bottom: auto;
       right: 12px;
-      width: 82px;
-      height: 82px;
+      width: 80px;
+      height: 80px;
     }
 
     /* --- Mobile Touch Controls --- */
@@ -155,13 +177,13 @@
     }
     #joy-base {
       position: absolute;
-      left: 22px;
-      bottom: 22px;
-      width: 118px;
-      height: 118px;
+      left: 20px;
+      bottom: 20px;
+      width: 116px;
+      height: 116px;
       border-radius: 50%;
-      background: rgba(24, 24, 32, 0.45);
-      border: 2px solid rgba(255, 255, 255, 0.24);
+      background: rgba(24, 24, 32, 0.52);
+      border: 2px solid rgba(255, 255, 255, 0.26);
       box-shadow: inset 0 0 18px rgba(0, 0, 0, 0.65);
       pointer-events: auto;
     }
@@ -174,29 +196,29 @@
       margin-left: -24px;
       margin-top: -24px;
       border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, rgba(244, 244, 245, 0.85), rgba(161, 161, 170, 0.55));
-      border: 1px solid rgba(255, 255, 255, 0.65);
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+      background: radial-gradient(circle at 35% 35%, rgba(244, 244, 245, 0.9), rgba(161, 161, 170, 0.55));
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.75);
       pointer-events: none;
     }
     #mobile-buttons {
       position: absolute;
-      right: 18px;
-      bottom: 20px;
+      right: 16px;
+      bottom: 18px;
       display: grid;
       grid-template-columns: repeat(2, 66px);
-      gap: 10px;
+      gap: 9px;
       pointer-events: auto;
     }
     .m-btn {
       width: 66px;
-      height: 54px;
+      height: 52px;
       border-radius: 10px;
-      background: rgba(18, 18, 24, 0.68);
+      background: rgba(18, 18, 24, 0.75);
       border: 1.5px solid rgba(255, 255, 255, 0.28);
       color: #f4f4f5;
       font-family: inherit;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: bold;
       letter-spacing: 0.5px;
       display: flex;
@@ -205,22 +227,23 @@
       text-align: center;
       padding: 4px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
+      touch-action: manipulation;
     }
     .m-btn:active, .m-btn.pressed {
-      background: rgba(239, 68, 68, 0.72);
+      background: rgba(239, 68, 68, 0.78);
       border-color: #ef4444;
       transform: scale(0.95);
     }
     #btn-interact {
-      border-color: rgba(250, 204, 21, 0.6);
+      border-color: rgba(250, 204, 21, 0.65);
       color: #fef08a;
     }
     #btn-pulse {
-      border-color: rgba(56, 189, 248, 0.6);
+      border-color: rgba(56, 189, 248, 0.65);
       color: #7dd3fc;
     }
 
-    /* --- Scrollable Mobile-Safe Overlay --- */
+    /* --- Scrollable Mobile & Desktop Overlay --- */
     #overlay {
       position: absolute;
       inset: 0;
@@ -230,44 +253,46 @@
       align-items: center;
       justify-content: flex-start;
       text-align: center;
-      padding: 18px 16px 24px;
+      padding: 16px 18px 24px;
       overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
       touch-action: pan-y;
-      z-index: 10;
+      z-index: 20;
     }
     #overlay h1 {
       margin-top: auto;
-      font-size: clamp(1.35rem, 5vw, 2.4rem);
+      font-size: clamp(1.4rem, 5vw, 2.4rem);
       color: #ef4444;
-      letter-spacing: 3px;
+      letter-spacing: 4px;
       margin-bottom: 10px;
       text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
     }
     #overlay p {
-      max-width: 610px;
-      line-height: 1.45;
+      max-width: 620px;
+      line-height: 1.5;
       color: #a1a1aa;
-      margin-bottom: 16px;
-      font-size: clamp(0.75rem, 3.2vw, 0.94rem);
+      margin-bottom: 18px;
+      font-size: clamp(0.75rem, 3vw, 0.94rem);
     }
     #start-btn {
       margin-bottom: auto;
       flex-shrink: 0;
       background: #ef4444;
       color: #040406;
-      border: 1px solid #ef4444;
-      padding: 11px 22px;
+      border: 2px solid #fca5a5;
+      padding: 12px 26px;
       font-family: inherit;
       font-weight: bold;
-      font-size: clamp(0.82rem, 3.5vw, 1.05rem);
-      letter-spacing: 1.5px;
+      font-size: clamp(0.85rem, 3.5vw, 1.05rem);
+      letter-spacing: 2px;
       cursor: pointer;
-      border-radius: 4px;
-      transition: 0.2s;
+      border-radius: 5px;
+      touch-action: manipulation;
+      box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
     }
-    #start-btn:hover {
+    #start-btn:hover, #start-btn:active {
       background: #f87171;
-      border-color: #f87171;
+      transform: scale(1.02);
     }
     #controls {
       width: min(900px, 100%);
@@ -296,6 +321,7 @@
     <div id="room-banner">MAIN CORRIDOR</div>
     <button id="touch-toggle" type="button">TOUCH UI</button>
     <div id="prompt">[R / CLICK] OPEN CLOSET</div>
+    <div id="toast">FOUND KEY!</div>
     <canvas id="radar" width="112" height="112"></canvas>
     <div id="crosshair"></div>
 
@@ -315,15 +341,15 @@
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT 3D</h1>
       <p id="ov-desc">
-        Explore the facility's <b>Rooms</b>, open doors, and search inside <b>Closets</b> to find hidden Security Keys and Batteries.<br><br>
-        <b>Mobile:</b> Left joystick to move, drag right screen to look, and tap buttons to open, sprint, or pulse.<br>
-        <b>PC:</b> WASD + Mouse, <b>R/Click</b> to open, <b>Shift</b> to sprint, <b>E</b> for pulse, <b>F</b> for light.
+        Explore the facility's <b>Rooms</b>, open doors, and search inside <b>Closets</b> for Security Keys &amp; Batteries. Empty opened closets can be used to <b>hide</b> when it hunts.<br><br>
+        <b>Mobile:</b> Left joystick to move, drag right screen to look, tap buttons to interact/sprint/pulse.<br>
+        <b>PC:</b> WASD to move, Mouse to look (click screen), Shift to sprint, R/Click to open, F for light, E for pulse.
       </p>
       <button id="start-btn" type="button">START SECTOR 1</button>
     </div>
   </div>
 
-  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse &nbsp;|&nbsp; OPEN DOOR / CLOSET: R or Click &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; LIGHT: F</div>
+  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse &nbsp;|&nbsp; OPEN / TAKE: R or Click &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; LIGHT: F</div>
 
   <script>
     const canvas = document.getElementById("game");
@@ -337,6 +363,7 @@
     const ovDesc = document.getElementById("ov-desc");
     const startBtn = document.getElementById("start-btn");
     const promptEl = document.getElementById("prompt");
+    const toastEl = document.getElementById("toast");
     const roomBannerEl = document.getElementById("room-banner");
     const touchToggleBtn = document.getElementById("touch-toggle");
 
@@ -346,6 +373,16 @@
     const stamUi = document.getElementById("stam-ui");
     const pulseUi = document.getElementById("pulse-ui");
     const statusUi = document.getElementById("status-ui");
+
+    let toastTimeout = null;
+    function showToast(msg) {
+      toastEl.textContent = msg;
+      toastEl.style.opacity = "1";
+      clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toastEl.style.opacity = "0";
+      }, 1700);
+    }
 
     // --- Mobile / Touch Detection & Toggle ---
     const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
@@ -358,8 +395,8 @@
       e.stopPropagation();
       const active = document.body.classList.toggle("touch-mode");
       touchToggleBtn.classList.toggle("active", active);
-      if (active && document.pointerLockElement) {
-        document.exitPointerLock();
+      if (active && document.pointerLockElement && document.exitPointerLock) {
+        try { document.exitPointerLock(); } catch (_) {}
       }
     });
 
@@ -398,9 +435,7 @@
       joyState.active = true;
       joyState.id = t.identifier;
       const rect = joyBase.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2;
-      const cy = rect.top + rect.height / 2;
-      updateJoystickVisual(t.clientX - cx, t.clientY - cy, rect.width * 0.38);
+      updateJoystickVisual(t.clientX - (rect.left + rect.width / 2), t.clientY - (rect.top + rect.height / 2), rect.width * 0.38);
     }, { passive: false });
 
     joyBase.addEventListener("touchmove", e => {
@@ -411,18 +446,14 @@
         const t = e.changedTouches[i];
         if (t.identifier === joyState.id) {
           const rect = joyBase.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          updateJoystickVisual(t.clientX - cx, t.clientY - cy, rect.width * 0.38);
+          updateJoystickVisual(t.clientX - (rect.left + rect.width / 2), t.clientY - (rect.top + rect.height / 2), rect.width * 0.38);
         }
       }
     }, { passive: false });
 
     function handleJoyEnd(e) {
       for (let i = 0; i < e.changedTouches.length; i++) {
-        if (e.changedTouches[i].identifier === joyState.id) {
-          resetJoystick();
-        }
+        if (e.changedTouches[i].identifier === joyState.id) resetJoystick();
       }
     }
     joyBase.addEventListener("touchend", handleJoyEnd);
@@ -432,7 +463,7 @@
       if (!running) return;
       for (let i = 0; i < e.changedTouches.length; i++) {
         const t = e.changedTouches[i];
-        if (t.target.closest("#joy-base") || t.target.closest("#mobile-buttons") || t.target.closest("#touch-toggle")) continue;
+        if (t.target.closest("#joy-base") || t.target.closest("#mobile-buttons") || t.target.closest("#touch-toggle") || t.target.closest("#overlay")) continue;
         if (!lookTouch.active) {
           lookTouch.active = true;
           lookTouch.id = t.identifier;
@@ -469,96 +500,95 @@
     const btnLight = document.getElementById("btn-light");
     const btnPulse = document.getElementById("btn-pulse");
 
-    btnInteract.addEventListener("touchstart", e => {
+    btnInteract.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
       interact();
-    }, { passive: false });
+    });
 
-    btnLight.addEventListener("touchstart", e => {
+    btnLight.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
       if (running && player.battery > 0) {
         player.flashlight = !player.flashlight;
         playTone(900, "square", 0.04, 0.1);
+        showToast(player.flashlight ? "FLASHLIGHT ON" : "FLASHLIGHT OFF");
       }
-    }, { passive: false });
+    });
 
-    btnPulse.addEventListener("touchstart", e => {
+    btnPulse.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
       triggerPulse();
-    }, { passive: false });
+    });
 
-    btnSprint.addEventListener("touchstart", e => {
-      e.preventDefault();
+    btnSprint.addEventListener("pointerdown", e => {
       e.stopPropagation();
       touchSprinting = true;
       btnSprint.classList.add("pressed");
-    }, { passive: false });
-
-    function stopTouchSprint(e) {
-      e.preventDefault();
+    });
+    window.addEventListener("pointerup", () => {
       touchSprinting = false;
       btnSprint.classList.remove("pressed");
-    }
-    btnSprint.addEventListener("touchend", stopTouchSprint);
-    btnSprint.addEventListener("touchcancel", stopTouchSprint);
+    });
 
-    // --- Procedural Web Audio ---
+    // --- Procedural Web Audio (Safe on All Browsers) ---
     let audioCtx;
     function initAudio() {
-      if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      if (audioCtx.state === "suspended") audioCtx.resume();
+      try {
+        if (!audioCtx) {
+          const AC = window.AudioContext || window.webkitAudioContext;
+          if (AC) audioCtx = new AC();
+        }
+        if (audioCtx && audioCtx.state === "suspended") {
+          audioCtx.resume();
+        }
+      } catch (_) {}
     }
 
     function playTone(freq, type, duration, vol = 0.15) {
       if (!audioCtx) return;
-      const osc = audioCtx.createOscillator();
-      const gain = audioCtx.createGain();
-      osc.type = type;
-      osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
-      gain.gain.setValueAtTime(vol, audioCtx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
-      osc.connect(gain);
-      gain.connect(audioCtx.destination);
-      osc.start();
-      osc.stop(audioCtx.currentTime + duration);
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (_) {}
     }
 
     function playDoorSound(opening = true) {
-      if (!audioCtx) return;
       playTone(opening ? 140 : 110, "sawtooth", 0.16, 0.12);
       setTimeout(() => playTone(opening ? 190 : 85, "triangle", 0.18, 0.1), 70);
     }
 
     function playClosetCreak() {
-      if (!audioCtx) return;
       playTone(230, "sawtooth", 0.14, 0.12);
       setTimeout(() => playTone(165, "sawtooth", 0.22, 0.12), 80);
     }
 
     function playShriek() {
-      if (!audioCtx) return;
       playTone(175, "sawtooth", 0.35, 0.25);
       setTimeout(() => playTone(310, "sawtooth", 0.4, 0.22), 80);
     }
 
     function playPulseSound() {
-      if (!audioCtx) return;
       playTone(520, "sine", 0.18, 0.22);
       setTimeout(() => playTone(140, "square", 0.32, 0.2), 70);
     }
 
     function playSectorClear() {
-      if (!audioCtx) return;
       [330, 440, 554].forEach((f, idx) => {
         setTimeout(() => playTone(f, "triangle", 0.25, 0.16), idx * 90);
       });
     }
 
     function playJumpscare() {
-      if (!audioCtx) return;
       [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
     }
 
@@ -645,15 +675,15 @@
       g.fillRect(TEX_SIZE - 96, 252, 26, 10);
     });
 
-    // --- 3 Sectors with Rooms & Closets ---
+    // --- 3 Sectors with Rooms, Closets, Furniture Props & Loose Items ---
     const SECTORS = [
       {
         name: "SECTOR 1 // EAST WING",
         keysNeeded: 3,
         playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
         monsterStart: { x: 11.0, y: 2.5 },
-        chaseSpeed: 3.2,
-        patrolSpeed: 1.45,
+        chaseSpeed: 3.15,
+        patrolSpeed: 1.4,
         rooms: [
           { name: "SECURITY OFFICE", x1: 1, y1: 1, x2: 6, y2: 5 },
           { name: "MEDBAY WARD", x1: 15, y1: 1, x2: 20, y2: 5 },
@@ -669,6 +699,12 @@
           { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
           { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
           { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+        ],
+        props: [
+          { x: 3.5, y: 3.5, kind: "desk" },
+          { x: 17.8, y: 3.5, kind: "crate" },
+          { x: 3.5, y: 10.8, kind: "crate" },
+          { x: 17.8, y: 10.8, kind: "desk" }
         ],
         looseItems: [
           { x: 11.0, y: 7.5, type: "battery", taken: false }
@@ -696,8 +732,8 @@
         keysNeeded: 4,
         playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
         monsterStart: { x: 11.0, y: 2.0 },
-        chaseSpeed: 3.45,
-        patrolSpeed: 1.6,
+        chaseSpeed: 3.4,
+        patrolSpeed: 1.55,
         rooms: [
           { name: "DIRECTOR SUITE", x1: 1, y1: 1, x2: 6, y2: 5 },
           { name: "CHEM LAB", x1: 15, y1: 1, x2: 20, y2: 5 },
@@ -713,6 +749,12 @@
           { x: 4.8, y: 12.2, loot: "empty", opened: false, taken: false },
           { x: 16.5, y: 12.2, loot: "key", opened: false, taken: false },
           { x: 19.2, y: 10.5, loot: "battery", opened: false, taken: false }
+        ],
+        props: [
+          { x: 3.6, y: 3.4, kind: "desk" },
+          { x: 17.6, y: 3.4, kind: "desk" },
+          { x: 3.6, y: 10.6, kind: "crate" },
+          { x: 17.6, y: 10.6, kind: "crate" }
         ],
         looseItems: [
           { x: 3.5, y: 7.0, type: "battery", taken: false },
@@ -741,12 +783,12 @@
         keysNeeded: 5,
         playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
         monsterStart: { x: 11.0, y: 2.0 },
-        chaseSpeed: 3.65,
-        patrolSpeed: 1.75,
+        chaseSpeed: 3.6,
+        patrolSpeed: 1.7,
         rooms: [
           { name: "CONTROL ROOM", x1: 1, y1: 1, x2: 6, y2: 5 },
           { name: "CRYO CHAMBER", x1: 15, y1: 1, x2: 20, y2: 5 },
-          { name: "ARMORY CLOSET", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "ARMORY ROOM", x1: 1, y1: 9, x2: 6, y2: 13 },
           { name: "REACTOR CORE", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
@@ -758,6 +800,12 @@
           { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
           { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
           { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+        ],
+        props: [
+          { x: 3.6, y: 3.4, kind: "desk" },
+          { x: 17.6, y: 3.4, kind: "crate" },
+          { x: 3.6, y: 10.6, kind: "crate" },
+          { x: 17.6, y: 10.6, kind: "desk" }
         ],
         looseItems: [
           { x: 11.0, y: 7.0, type: "battery", taken: false },
@@ -791,8 +839,932 @@
     let mapGrid = [];
     let doorStates = {};
     let closets = [];
+    let props = [];
     let sprites = [];
-    let player, monster, keysCollected, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
+    let player, monster, keysCollected, isHiding = false, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
     let activeInteraction = null;
 
-    function loadSector(idx,
+    function loadSector(idx, preserveBattery = true) {
+      sectorIndex = idx;
+      const sec = SECTORS[idx];
+      const prevBat = preserveBattery && player ? Math.max(35, player.battery) : 100;
+
+      mapGrid = sec.map.map(row => [...row]);
+      doorStates = {};
+      for (let r = 0; r < mapGrid.length; r++) {
+        for (let c = 0; c < mapGrid[0].length; c++) {
+          if (mapGrid[r][c] === 3) {
+            doorStates[`${c},${r}`] = { open: false, progress: 0 };
+          }
+        }
+      }
+
+      player = {
+        x: sec.playerStart.x,
+        y: sec.playerStart.y,
+        angle: sec.playerStart.angle,
+        walkSpeed: 2.5,
+        sprintSpeed: 4.0,
+        stamina: 100,
+        flashlight: true,
+        battery: prevBat,
+        pulseCooldown: 0
+      };
+
+      monster = {
+        x: sec.monsterStart.x,
+        y: sec.monsterStart.y,
+        patrolSpeed: sec.patrolSpeed,
+        chaseSpeed: sec.chaseSpeed,
+        chasing: false,
+        memoryTimer: 0,
+        stunTimer: 0,
+        targetX: 11.0,
+        targetY: 7.0
+      };
+
+      closets = sec.closets.map(c => ({ ...c, openAnim: 0 }));
+      props = (sec.props || []).map(p => ({ ...p }));
+      sprites = sec.looseItems.map(it => ({ ...it }));
+
+      keysCollected = 0;
+      isHiding = false;
+      jumpscareTimer = 0;
+      pulseWaveTimer = 0;
+      activeInteraction = null;
+      promptEl.style.display = "none";
+      resetJoystick();
+      touchSprinting = false;
+      btnSprint.classList.remove("pressed");
+      updateHUD();
+    }
+
+    function getKeysNeeded() {
+      return SECTORS[sectorIndex].keysNeeded;
+    }
+
+    function getCurrentRoomName() {
+      const sec = SECTORS[sectorIndex];
+      for (const rm of sec.rooms) {
+        if (player.x >= rm.x1 && player.x <= rm.x2 + 1 && player.y >= rm.y1 && player.y <= rm.y2 + 1) {
+          return rm.name;
+        }
+      }
+      return "MAIN CORRIDOR";
+    }
+
+    function triggerPulse() {
+      if (!running || player.pulseCooldown > 0) return;
+      player.pulseCooldown = 10;
+      pulseWaveTimer = 0.65;
+      playPulseSound();
+      showToast("EMP PULSE FIRED!");
+
+      const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+      if (dist < 6.8) {
+        monster.stunTimer = 2.8;
+        monster.chasing = false;
+        monster.memoryTimer = 0;
+        showToast("ENTITY STUNNED!");
+      }
+      updateHUD();
+    }
+
+    function findLookTarget() {
+      const cos = Math.cos(player.angle);
+      const sin = Math.sin(player.angle);
+
+      for (const cl of closets) {
+        const dx = cl.x - player.x;
+        const dy = cl.y - player.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 1.7) {
+          const dot = (dx / dist) * cos + (dy / dist) * sin;
+          if (dot > 0.74) {
+            if (!cl.opened) return { type: "closet", obj: cl, label: "OPEN CLOSET" };
+            if (!cl.taken && cl.loot !== "empty") {
+              const itemName = cl.loot === "key" ? "TAKE SECURITY KEY" : "TAKE BATTERY";
+              return { type: "closetLoot", obj: cl, label: itemName };
+            }
+            if (cl.loot === "empty") {
+              return { type: "hideToggle", obj: cl, label: isHiding ? "STEP OUT OF CLOSET" : "HIDE IN CLOSET" };
+            }
+          }
+        }
+      }
+
+      for (let step = 0.65; step <= 1.7; step += 0.25) {
+        const tx = Math.floor(player.x + cos * step);
+        const ty = Math.floor(player.y + sin * step);
+        if (mapGrid[ty] && mapGrid[ty][tx] === 3) {
+          const dState = doorStates[`${tx},${ty}`];
+          if (Math.floor(player.x) === tx && Math.floor(player.y) === ty) return null;
+          return {
+            type: "door",
+            gx: tx,
+            gy: ty,
+            state: dState,
+            label: dState.open ? "CLOSE DOOR" : "OPEN DOOR"
+          };
+        }
+      }
+
+      return null;
+    }
+
+    function interact() {
+      if (!running || !activeInteraction) return;
+
+      if (activeInteraction.type === "door") {
+        const st = activeInteraction.state;
+        st.open = !st.open;
+        playDoorSound(st.open);
+        showToast(st.open ? "DOOR OPENED" : "DOOR CLOSED");
+      } else if (activeInteraction.type === "closet") {
+        const cl = activeInteraction.obj;
+        cl.opened = true;
+        playClosetCreak();
+        if (cl.loot === "empty") showToast("CLOSET IS EMPTY (CAN HIDE)");
+        else if (cl.loot === "key") showToast("SECURITY KEY INSIDE!");
+        else showToast("BATTERY INSIDE!");
+      } else if (activeInteraction.type === "closetLoot") {
+        const cl = activeInteraction.obj;
+        cl.taken = true;
+        if (cl.loot === "key") {
+          keysCollected++;
+          playTone(660, "sine", 0.25, 0.22);
+          showToast(`KEY COLLECTED (${keysCollected}/${getKeysNeeded()})`);
+        } else if (cl.loot === "battery") {
+          player.battery = Math.min(100, player.battery + 45);
+          playTone(440, "triangle", 0.2, 0.22);
+          showToast("BATTERY +45%");
+        }
+        updateHUD();
+      } else if (activeInteraction.type === "hideToggle") {
+        isHiding = !isHiding;
+        playClosetCreak();
+        if (isHiding) {
+          player.flashlight = false;
+          showToast("HIDING INSIDE CLOSET...");
+        } else {
+          showToast("STEPPED OUT");
+        }
+      }
+    }
+
+    function updateHUD() {
+      const needed = getKeysNeeded();
+      secUi.textContent = `${sectorIndex + 1}/${SECTORS.length}`;
+      keysUi.textContent = `${keysCollected}/${needed}`;
+      keysUi.className = keysCollected >= needed ? "good" : "warn";
+
+      const b = Math.ceil(player.battery);
+      batUi.textContent = `${b}%`;
+      batUi.className = b > 40 ? "good" : b > 15 ? "warn" : "danger";
+
+      const s = Math.ceil(player.stamina);
+      stamUi.textContent = `${s}%`;
+      stamUi.className = s > 40 ? "good" : s > 15 ? "warn" : "danger";
+
+      if (player.pulseCooldown > 0) {
+        pulseUi.textContent = `${player.pulseCooldown.toFixed(1)}s`;
+        pulseUi.className = "warn";
+      } else {
+        pulseUi.textContent = "READY";
+        pulseUi.className = "pulse-ready";
+      }
+    }
+
+    function isBlocked(x, y, isMonster = false) {
+      const gx = Math.floor(x);
+      const gy = Math.floor(y);
+      if (gy < 0 || gy >= mapGrid.length || gx < 0 || gx >= mapGrid[0].length) return true;
+      const cell = mapGrid[gy][gx];
+      if (cell === 1 || cell === 4) return true;
+      if (cell === 2 && keysCollected < getKeysNeeded()) return true;
+      if (cell === 3) {
+        const dState = doorStates[`${gx},${gy}`];
+        if (dState && !dState.open) {
+          if (isMonster && monster.chasing) {
+            dState.open = true;
+            playDoorSound(true);
+            return false;
+          }
+          return true;
+        }
+      }
+      for (const cl of closets) {
+        if (Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
+      }
+      for (const pr of props) {
+        if (Math.hypot(x - pr.x, y - pr.y) < 0.34) return true;
+      }
+      return false;
+    }
+
+    function moveWithSlide(ent, dx, dy, pad = 0.21, isMonster = false) {
+      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad, isMonster) &&
+          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad, isMonster)) {
+        ent.x += dx;
+      }
+      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad, isMonster) &&
+          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad, isMonster)) {
+        ent.y += dy;
+      }
+    }
+
+    function hasLineOfSight(x1, y1, x2, y2) {
+      const dist = Math.hypot(x2 - x1, y2 - y1);
+      const steps = Math.ceil(dist * 6);
+      for (let i = 1; i < steps; i++) {
+        const t = i / steps;
+        const cx = Math.floor(x1 + (x2 - x1) * t);
+        const cy = Math.floor(y1 + (y2 - y1) * t);
+        const cell = mapGrid[cy] && mapGrid[cy][cx];
+        if (cell === 1 || cell === 4) return false;
+        if (cell === 3 && !doorStates[`${cx},${cy}`].open) return false;
+      }
+      return true;
+    }
+
+    function openOverlay(mode) {
+      running = false;
+      promptEl.style.display = "none";
+      resetJoystick();
+      touchSprinting = false;
+      btnSprint.classList.remove("pressed");
+      if (document.pointerLockElement && document.exitPointerLock) {
+        try { document.exitPointerLock(); } catch (_) {}
+      }
+      overlay.style.display = "flex";
+
+      if (mode === "nextSector") {
+        playSectorClear();
+        const nextIdx = sectorIndex + 1;
+        ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
+        ovTitle.style.color = "#c084fc";
+        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys hidden inside room closets).`;
+        startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
+        startBtn.dataset.action = "nextSector";
+      } else if (mode === "wonAll") {
+        playSectorClear();
+        ovTitle.textContent = "FACILITY ESCAPED";
+        ovTitle.style.color = "#22c55e";
+        ovDesc.innerHTML = "You searched every room and escaped all 3 sectors.<br><br>Want to play another full run?";
+        startBtn.textContent = "PLAY FULL RUN AGAIN";
+        startBtn.dataset.action = "restartAll";
+      } else {
+        ovTitle.textContent = "IT CAUGHT YOU";
+        ovTitle.style.color = "#ef4444";
+        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Hide in empty opened closets, shut room doors, or fire a stun pulse when it gets close.`;
+        startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
+        startBtn.dataset.action = "retrySector";
+      }
+    }
+
+    function update(dt) {
+      if (jumpscareTimer > 0) {
+        jumpscareTimer -= dt;
+        if (jumpscareTimer <= 0) openOverlay("caught");
+        return;
+      }
+      if (!running) return;
+
+      for (const key in doorStates) {
+        const d = doorStates[key];
+        const target = d.open ? 1 : 0;
+        d.progress += (target - d.progress) * Math.min(1, dt * 9);
+      }
+      for (const cl of closets) {
+        if (cl.opened && cl.openAnim < 1) {
+          cl.openAnim = Math.min(1, cl.openAnim + dt * 5);
+        }
+      }
+
+      if (player.pulseCooldown > 0) player.pulseCooldown = Math.max(0, player.pulseCooldown - dt);
+      if (pulseWaveTimer > 0) pulseWaveTimer = Math.max(0, pulseWaveTimer - dt);
+
+      if (keysDown["arrowleft"]) player.angle -= 2.4 * dt;
+      if (keysDown["arrowright"]) player.angle += 2.4 * dt;
+
+      const cos = Math.cos(player.angle);
+      const sin = Math.sin(player.angle);
+      let fwd = 0, strafe = 0;
+      if (keysDown["w"] || keysDown["arrowup"]) fwd += 1;
+      if (keysDown["s"] || keysDown["arrowdown"]) fwd -= 1;
+      if (keysDown["d"]) strafe += 1;
+      if (keysDown["a"]) strafe -= 1;
+
+      if (Math.abs(joyState.y) > 0.12) fwd += joyState.y;
+      if (Math.abs(joyState.x) > 0.12) strafe += joyState.x;
+
+      const inputMag = Math.hypot(fwd, strafe);
+      const moving = inputMag > 0.12;
+      if (moving && isHiding) {
+        isHiding = false;
+        showToast("STEPPED OUT");
+      }
+
+      const wantsSprint = keysDown["shift"] || keysDown["shiftleft"] || touchSprinting;
+      const sprinting = wantsSprint && moving && player.stamina > 2 && !isHiding;
+
+      if (sprinting) {
+        player.stamina = Math.max(0, player.stamina - dt * 30);
+      } else {
+        player.stamina = Math.min(100, player.stamina + dt * (moving ? 14 : 24));
+      }
+
+      const speed = isHiding ? 0 : (sprinting ? player.sprintSpeed : player.walkSpeed);
+
+      if (moving && !isHiding) {
+        const clampedMag = Math.min(1, inputMag);
+        const nf = (fwd / inputMag) * clampedMag;
+        const ns = (strafe / inputMag) * clampedMag;
+        const vx = cos * nf - sin * ns;
+        const vy = sin * nf + cos * ns;
+        moveWithSlide(player, vx * speed * dt, vy * speed * dt, 0.21, false);
+
+        bobTimer += dt * (sprinting ? 14 : 9);
+        footstepTimer -= dt * (sprinting ? 3.2 : 1.9);
+        if (footstepTimer <= 0) {
+          playTone(sprinting ? 95 : 75, "triangle", 0.06, sprinting ? 0.12 : 0.06);
+          footstepTimer = 1;
+        }
+      } else {
+        bobTimer = 0;
+      }
+
+      if (player.flashlight && player.battery > 0 && !isHiding) {
+        player.battery = Math.max(0, player.battery - dt * 1.9);
+        if (player.battery === 0) player.flashlight = false;
+      }
+
+      sprites.forEach(sp => {
+        if (!sp.taken && Math.hypot(player.x - sp.x, player.y - sp.y) < 0.65) {
+          sp.taken = true;
+          if (sp.type === "key") {
+            keysCollected++;
+            playTone(660, "sine", 0.25, 0.2);
+            showToast(`KEY COLLECTED (${keysCollected}/${getKeysNeeded()})`);
+          } else {
+            player.battery = Math.min(100, player.battery + 45);
+            playTone(440, "triangle", 0.2, 0.2);
+            showToast("BATTERY +45%");
+          }
+        }
+      });
+
+      roomBannerEl.textContent = getCurrentRoomName();
+      activeInteraction = findLookTarget();
+      if (activeInteraction) {
+        const prefix = document.body.classList.contains("touch-mode") ? "[TAP] " : "[R / CLICK] ";
+        promptEl.textContent = prefix + activeInteraction.label;
+        promptEl.style.display = "block";
+      } else {
+        promptEl.style.display = "none";
+      }
+
+      const gx = Math.floor(player.x);
+      const gy = Math.floor(player.y);
+      if (mapGrid[gy] && mapGrid[gy][gx] === 2 && keysCollected >= getKeysNeeded()) {
+        if (sectorIndex + 1 < SECTORS.length) {
+          openOverlay("nextSector");
+        } else {
+          openOverlay("wonAll");
+        }
+        return;
+      }
+
+      const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+
+      if (monster.stunTimer > 0) {
+        monster.stunTimer = Math.max(0, monster.stunTimer - dt);
+        statusUi.textContent = "STUNNED!";
+        statusUi.className = "pulse-ready";
+      } else {
+        const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
+        const detectRange = isHiding ? 1.15 : (player.flashlight ? 7.2 : (sprinting ? 4.5 : 2.3));
+
+        if (los && dist < detectRange) {
+          if (!monster.chasing) playShriek();
+          monster.chasing = true;
+          monster.memoryTimer = 3.5 + sectorIndex * 0.35;
+          monster.targetX = player.x;
+          monster.targetY = player.y;
+        } else if (monster.chasing) {
+          monster.memoryTimer -= dt;
+          if (monster.memoryTimer <= 0) {
+            monster.chasing = false;
+          }
+        }
+
+        if (!monster.chasing && Math.hypot(monster.targetX - monster.x, monster.targetY - monster.y) < 0.5) {
+          let rx, ry;
+          do {
+            rx = Math.floor(Math.random() * (mapGrid[0].length - 2)) + 1.5;
+            ry = Math.floor(Math.random() * (mapGrid.length - 2)) + 1.5;
+          } while (isBlocked(rx, ry, false));
+          monster.targetX = rx;
+          monster.targetY = ry;
+        }
+
+        const mSpd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
+        const mAng = Math.atan2(monster.targetY - monster.y, monster.targetX - monster.x);
+        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2, true);
+
+        if (dist < 6.8 || monster.chasing) {
+          monsterStepTimer -= dt * (monster.chasing ? 4.4 : 1.9);
+          if (monsterStepTimer <= 0) {
+            const vol = Math.min(0.28, (6.8 / Math.max(1, dist)) * 0.14);
+            playTone(52, "sine", 0.14, vol);
+            monsterStepTimer = 1;
+          }
+          statusUi.textContent = monster.chasing ? "RUN!" : "NEARBY";
+          statusUi.className = "danger";
+        } else if (isHiding) {
+          statusUi.textContent = "HIDDEN";
+          statusUi.className = "hide-tag";
+        } else {
+          statusUi.textContent = "QUIET";
+          statusUi.className = "";
+        }
+
+        if (dist < 0.5) {
+          running = false;
+          jumpscareTimer = 0.85;
+          playJumpscare();
+          return;
+        }
+      }
+
+      updateHUD();
+    }
+
+    function renderRadar() {
+      const rw = radarCanvas.width;
+      const rh = radarCanvas.height;
+      const cx = rw / 2;
+      const cy = rh / 2;
+      const radius = rw / 2 - 4;
+      const scale = 9;
+
+      rCtx.clearRect(0, 0, rw, rh);
+      rCtx.save();
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, radius, 0, Math.PI * 2);
+      rCtx.clip();
+
+      rCtx.fillStyle = "rgba(6, 12, 9, 0.9)";
+      rCtx.fillRect(0, 0, rw, rh);
+
+      rCtx.strokeStyle = "rgba(34, 197, 94, 0.22)";
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
+      rCtx.stroke();
+
+      const cos = Math.cos(-player.angle - Math.PI / 2);
+      const sin = Math.sin(-player.angle - Math.PI / 2);
+
+      function toRadar(wx, wy) {
+        const dx = wx - player.x;
+        const dy = wy - player.y;
+        return {
+          x: cx + (dx * cos - dy * sin) * scale,
+          y: cy + (dx * sin + dy * cos) * scale
+        };
+      }
+
+      closets.forEach(cl => {
+        if (cl.taken) return;
+        const pt = toRadar(cl.x, cl.y);
+        rCtx.fillStyle = cl.opened && cl.loot === "key" ? "#facc15" : "rgba(192, 132, 252, 0.7)";
+        rCtx.fillRect(pt.x - 2.2, pt.y - 2.2, 4.4, 4.4);
+      });
+
+      for (let r = 0; r < mapGrid.length; r++) {
+        for (let c = 0; c < mapGrid[0].length; c++) {
+          if (mapGrid[r][c] === 2) {
+            const pt = toRadar(c + 0.5, r + 0.5);
+            rCtx.fillStyle = keysCollected >= getKeysNeeded() ? "#22c55e" : "#71717a";
+            rCtx.fillRect(pt.x - 3, pt.y - 3, 6, 6);
+          }
+        }
+      }
+
+      const mDist = Math.hypot(monster.x - player.x, monster.y - player.y);
+      if (mDist < 7.5 || monster.chasing) {
+        const mPt = toRadar(monster.x, monster.y);
+        rCtx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : "#ef4444";
+        rCtx.beginPath();
+        rCtx.arc(mPt.x, mPt.y, 3.8, 0, Math.PI * 2);
+        rCtx.fill();
+      }
+
+      rCtx.fillStyle = isHiding ? "#a78bfa" : "#ffffff";
+      rCtx.beginPath();
+      rCtx.arc(cx, cy, 3, 0, Math.PI * 2);
+      rCtx.fill();
+
+      rCtx.restore();
+    }
+
+    function render3D() {
+      const W = canvas.width;
+      const H = canvas.height;
+
+      if (jumpscareTimer > 0) {
+        ctx.fillStyle = Math.random() < 0.5 ? "#7f1d1d" : "#09090b";
+        ctx.fillRect(0, 0, W, H);
+        const shakeX = (Math.random() - 0.5) * 40;
+        const shakeY = (Math.random() - 0.5) * 40;
+
+        ctx.fillStyle = "#000";
+        ctx.beginPath();
+        ctx.arc(W / 2 + shakeX, H / 2 + shakeY, 190, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#fef08a";
+        ctx.beginPath();
+        ctx.arc(W / 2 - 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
+        ctx.arc(W / 2 + 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = "#ef4444";
+        ctx.fillRect(W / 2 - 75 + shakeX, H / 2 + 45 + shakeY, 150, 55);
+        return;
+      }
+
+      const bobOffset = Math.sin(bobTimer) * 8;
+      const horizonY = H / 2 + bobOffset;
+
+      const flicker = player.flashlight && player.battery > 0 && !isHiding
+        ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
+        : 0;
+
+      const roofGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
+      roofGrad.addColorStop(0, flicker > 0 ? "#181c24" : "#08090d");
+      roofGrad.addColorStop(1, "#030305");
+      ctx.fillStyle = roofGrad;
+      ctx.fillRect(0, 0, W, horizonY);
+
+      const floorGrad = ctx.createLinearGradient(0, horizonY, 0, H);
+      floorGrad.addColorStop(0, "#040406");
+      floorGrad.addColorStop(1, flicker > 0 ? "#1b2029" : "#090a0e");
+      ctx.fillStyle = floorGrad;
+      ctx.fillRect(0, horizonY, W, H - horizonY);
+
+      const FOV = Math.PI / 3;
+      const dirX = Math.cos(player.angle);
+      const dirY = Math.sin(player.angle);
+      const planeX = -dirY * Math.tan(FOV / 2);
+      const planeY = dirX * Math.tan(FOV / 2);
+
+      const NUM_RAYS = 450;
+      const stripW = W / NUM_RAYS;
+      const zBuffer = new Array(NUM_RAYS);
+
+      for (let i = 0; i < NUM_RAYS; i++) {
+        const rayScreenPos = (i / NUM_RAYS) - 0.5;
+        const rayAngle = player.angle + rayScreenPos * FOV;
+        const rayDirX = Math.cos(rayAngle);
+        const rayDirY = Math.sin(rayAngle);
+
+        let mapX = Math.floor(player.x);
+        let mapY = Math.floor(player.y);
+
+        const deltaDistX = Math.abs(1 / (rayDirX || 1e-6));
+        const deltaDistY = Math.abs(1 / (rayDirY || 1e-6));
+
+        let stepX, sideDistX, stepY, sideDistY;
+        if (rayDirX < 0) {
+          stepX = -1;
+          sideDistX = (player.x - mapX) * deltaDistX;
+        } else {
+          stepX = 1;
+          sideDistX = (mapX + 1.0 - player.x) * deltaDistX;
+        }
+        if (rayDirY < 0) {
+          stepY = -1;
+          sideDistY = (player.y - mapY) * deltaDistY;
+        } else {
+          stepY = 1;
+          sideDistY = (mapY + 1.0 - player.y) * deltaDistY;
+        }
+
+        let hit = 0, side = 0, perpDist = 0, wallX = 0;
+        while (hit === 0) {
+          if (sideDistX < sideDistY) {
+            sideDistX += deltaDistX;
+            mapX += stepX;
+            side = 0;
+          } else {
+            sideDistY += deltaDistY;
+            mapY += stepY;
+            side = 1;
+          }
+          const cell = mapGrid[mapY] && mapGrid[mapY][mapX];
+          if (cell === 1 || cell === 2 || cell === 4) {
+            hit = cell;
+            perpDist = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+            wallX = side === 0 ? player.y + perpDist * rayDirY : player.x + perpDist * rayDirX;
+            wallX -= Math.floor(wallX);
+          } else if (cell === 3) {
+            const dState = doorStates[`${mapX},${mapY}`];
+            const distToDoor = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
+            let wx = side === 0 ? player.y + distToDoor * rayDirY : player.x + distToDoor * rayDirX;
+            wx -= Math.floor(wx);
+            if (wx >= dState.progress) {
+              hit = 3;
+              perpDist = distToDoor;
+              wallX = wx - dState.progress;
+            }
+          }
+        }
+
+        zBuffer[i] = perpDist;
+
+        const lineHeight = H / Math.max(0.05, perpDist);
+        const drawStart = (H - lineHeight) / 2 + bobOffset;
+
+        const centerFocus = Math.max(0, 1 - Math.abs(rayScreenPos) * 2.1);
+        const beamLight = flicker * centerFocus * Math.max(0, 1 - perpDist / 7.5);
+        const ambientLight = Math.max(0, 0.24 - perpDist * 0.08);
+        const light = Math.min(1, beamLight + ambientLight) * (side === 1 ? 0.82 : 1);
+
+        if (hit === 2) {
+          const unlocked = keysCollected >= getKeysNeeded();
+          const r = unlocked ? 25 : 170;
+          const g = unlocked ? 185 : 30;
+          ctx.fillStyle = `rgb(${Math.floor(r * light)}, ${Math.floor(g * light)}, ${Math.floor(40 * light)})`;
+          ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
+        } else {
+          const texSource = hit === 3 ? doorTex : (hit === 4 ? roomWallTex : hallWallTex);
+          const texX = Math.min(TEX_SIZE - 1, Math.floor(wallX * TEX_SIZE));
+
+          ctx.drawImage(
+            texSource,
+            texX, 0, 1, TEX_SIZE,
+            i * stripW, drawStart, stripW + 0.6, lineHeight
+          );
+
+          const darkness = Math.max(0, Math.min(0.97, 1 - light * 1.18));
+          ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
+          ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
+        }
+      }
+
+      const renderList = [];
+      closets.forEach(cl => renderList.push({ x: cl.x, y: cl.y, kind: "closet", data: cl }));
+      props.forEach(pr => renderList.push({ x: pr.x, y: pr.y, kind: "prop", data: pr }));
+      sprites.forEach(sp => {
+        if (!sp.taken) renderList.push({ x: sp.x, y: sp.y, kind: sp.type });
+      });
+      renderList.push({ x: monster.x, y: monster.y, kind: "monster" });
+
+      renderList.sort((a, b) => {
+        const da = (player.x - a.x) ** 2 + (player.y - a.y) ** 2;
+        const db = (player.x - b.x) ** 2 + (player.y - b.y) ** 2;
+        return db - da;
+      });
+
+      const invDet = 1.0 / (planeX * dirY - dirX * planeY);
+
+      renderList.forEach(obj => {
+        const sx = obj.x - player.x;
+        const sy = obj.y - player.y;
+
+        const transformX = invDet * (dirY * sx - dirX * sy);
+        const transformY = invDet * (-planeY * sx + planeX * sy);
+
+        if (transformY <= 0.15) return;
+
+        const screenX = (W / 2) * (1 + transformX / transformY);
+        const spriteSize = Math.abs(H / transformY);
+        const rayIdx = Math.floor((screenX / W) * NUM_RAYS);
+
+        if (rayIdx < 0 || rayIdx >= NUM_RAYS || transformY >= zBuffer[rayIdx]) return;
+
+        const normScreen = (screenX / W) - 0.5;
+        const centerFocus = Math.max(0, 1 - Math.abs(normScreen) * 2.1);
+        const light = Math.min(1, flicker * centerFocus * Math.max(0, 1 - transformY / 7.5) + Math.max(0, 0.25 - transformY * 0.08));
+
+        if (obj.kind === "closet") {
+          const cl = obj.data;
+          const cW = spriteSize * 0.62;
+          const cH = spriteSize * 0.86;
+          const leftX = screenX - cW / 2;
+          const topY = H / 2 - cH * 0.38 + bobOffset;
+
+          ctx.fillStyle = "#2b1d14";
+          ctx.fillRect(leftX, topY, cW, cH);
+          ctx.strokeStyle = "#140d09";
+          ctx.lineWidth = 2;
+          ctx.strokeRect(leftX, topY, cW, cH);
+
+          if (!cl.opened) {
+            ctx.fillStyle = "#3a271b";
+            ctx.fillRect(leftX + 4, topY + 4, cW / 2 - 5, cH - 8);
+            ctx.fillRect(screenX + 1, topY + 4, cW / 2 - 5, cH - 8);
+
+            ctx.fillStyle = "#eab308";
+            ctx.fillRect(screenX - 6, topY + cH * 0.48, 3, 10);
+            ctx.fillRect(screenX + 3, topY + cH * 0.48, 3, 10);
+          } else {
+            ctx.fillStyle = "#0d0907";
+            ctx.fillRect(leftX + 6, topY + 6, cW - 12, cH - 12);
+
+            ctx.fillStyle = "#2b1d14";
+            ctx.fillRect(leftX + 6, topY + cH * 0.56, cW - 12, 4);
+
+            const doorLeafW = cW * 0.14;
+            ctx.fillStyle = "#3a271b";
+            ctx.fillRect(leftX - doorLeafW, topY + 2, doorLeafW, cH - 4);
+            ctx.fillRect(leftX + cW, topY + 2, doorLeafW, cH - 4);
+
+            if (!cl.taken && cl.loot !== "empty") {
+              const itemR = Math.max(5, spriteSize * 0.11);
+              const itemY = topY + cH * 0.46;
+              ctx.fillStyle = cl.loot === "key" ? "#facc15" : "#38bdf8";
+              ctx.beginPath();
+              ctx.arc(screenX, itemY, itemR, 0, Math.PI * 2);
+              ctx.fill();
+            }
+          }
+
+          const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
+          ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
+          ctx.fillRect(leftX - cW * 0.15, topY, cW * 1.3, cH);
+
+        } else if (obj.kind === "prop") {
+          const pr = obj.data;
+          if (pr.kind === "desk") {
+            const dW = spriteSize * 0.68;
+            const dH = spriteSize * 0.34;
+            const leftX = screenX - dW / 2;
+            const topY = H / 2 + spriteSize * 0.04 + bobOffset;
+            ctx.fillStyle = "#4a3525";
+            ctx.fillRect(leftX, topY, dW, dH * 0.35);
+            ctx.fillStyle = "#2c1e14";
+            ctx.fillRect(leftX + dW * 0.08, topY + dH * 0.35, dW * 0.12, dH * 0.65);
+            ctx.fillRect(leftX + dW * 0.8, topY + dH * 0.35, dW * 0.12, dH * 0.65);
+          } else {
+            const boxS = spriteSize * 0.34;
+            const leftX = screenX - boxS / 2;
+            const topY = H / 2 + spriteSize * 0.08 + bobOffset;
+            ctx.fillStyle = "#3f4a3c";
+            ctx.fillRect(leftX, topY, boxS, boxS);
+            ctx.strokeStyle = "#1f261d";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(leftX, topY, boxS, boxS);
+          }
+          const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
+          ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
+          ctx.fillRect(screenX - spriteSize * 0.4, H / 2 - spriteSize * 0.2 + bobOffset, spriteSize * 0.8, spriteSize * 0.7);
+
+        } else if (obj.kind === "monster") {
+          const mW = spriteSize * 0.55;
+          const mH = spriteSize * 0.88;
+          const topY = H / 2 - mH * 0.42 + bobOffset;
+
+          ctx.fillStyle = monster.stunTimer > 0
+            ? `rgba(30, 58, 138, ${Math.max(0.5, light)})`
+            : `rgba(15, 5, 5, ${Math.max(0.45, light)})`;
+          ctx.beginPath();
+          ctx.ellipse(screenX, topY + mH * 0.5, mW * 0.48, mH * 0.5, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          const eyeY = topY + mH * 0.22;
+          const eyeSpread = mW * 0.18;
+          const eyeR = Math.max(2, spriteSize * 0.032);
+          ctx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : (monster.chasing ? "#ef4444" : "#fef08a");
+          ctx.beginPath();
+          ctx.arc(screenX - eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
+          ctx.arc(screenX + eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
+          ctx.fill();
+        } else {
+          const itemR = Math.max(4, spriteSize * 0.14);
+          const itemY = H / 2 + spriteSize * 0.22 + bobOffset + Math.sin(performance.now() * 0.005) * 6;
+          ctx.fillStyle = obj.kind === "key" ? "#facc15" : "#38bdf8";
+          ctx.beginPath();
+          ctx.arc(screenX, itemY, itemR, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      });
+
+      if (isHiding) {
+        ctx.fillStyle = "rgba(8, 6, 5, 0.42)";
+        ctx.fillRect(0, 0, W * 0.18, H);
+        ctx.fillRect(W * 0.82, 0, W * 0.18, H);
+      }
+
+      if (pulseWaveTimer > 0) {
+        const alpha = pulseWaveTimer / 0.65;
+        ctx.strokeStyle = `rgba(56, 189, 248, ${alpha * 0.85})`;
+        ctx.lineWidth = 5;
+        ctx.beginPath();
+        ctx.arc(W / 2, H / 2, (1 - alpha) * 340 + 30, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      if (monster.chasing && monster.stunTimer <= 0) {
+        const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+        const pulse = 0.25 + Math.max(0, (5 - dist) / 5) * 0.35;
+        const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.65);
+        grad.addColorStop(0, "rgba(220, 38, 38, 0)");
+        grad.addColorStop(1, `rgba(220, 38, 38, ${pulse})`);
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, W, H);
+      }
+
+      renderRadar();
+    }
+
+    let lastTime = 0;
+    function loop(ts) {
+      const dt = Math.min(0.05, Math.max(0, (ts - lastTime) / 1000));
+      lastTime = ts;
+      update(dt);
+      render3D();
+      requestAnimationFrame(loop);
+    }
+
+    function beginGameSession() {
+      initAudio();
+      const action = startBtn.dataset.action || "start";
+      if (action === "nextSector") {
+        loadSector(sectorIndex + 1, true);
+      } else if (action === "retrySector") {
+        loadSector(sectorIndex, false);
+      } else {
+        loadSector(0, false);
+      }
+      overlay.style.display = "none";
+      running = true;
+      showToast(SECTORS[sectorIndex].name);
+
+      if (!document.body.classList.contains("touch-mode") && canvas.requestPointerLock) {
+        try {
+          const res = canvas.requestPointerLock();
+          if (res && typeof res.catch === "function") res.catch(() => {});
+        } catch (_) {}
+      }
+    }
+
+    window.addEventListener("keydown", e => {
+      const k = e.key.toLowerCase();
+      keysDown[k] = true;
+      if (!running && (k === "enter" || k === " ") && overlay.style.display !== "none") {
+        e.preventDefault();
+        beginGameSession();
+        return;
+      }
+      if (k === "f" && running && player.battery > 0 && !isHiding) {
+        player.flashlight = !player.flashlight;
+        playTone(900, "square", 0.04, 0.1);
+        showToast(player.flashlight ? "FLASHLIGHT ON" : "FLASHLIGHT OFF");
+      }
+      if (k === "e" && running) {
+        triggerPulse();
+      }
+      if (k === "r" && running) {
+        interact();
+      }
+    });
+    window.addEventListener("keyup", e => keysDown[e.key.toLowerCase()] = false);
+
+    document.addEventListener("mousemove", e => {
+      if (document.pointerLockElement === canvas && running) {
+        player.angle += e.movementX * 0.0028;
+      }
+    });
+
+    canvas.addEventListener("click", () => {
+      if (!running || document.body.classList.contains("touch-mode")) return;
+      if (document.pointerLockElement !== canvas && canvas.requestPointerLock) {
+        try {
+          const res = canvas.requestPointerLock();
+          if (res && typeof res.catch === "function") res.catch(() => {});
+        } catch (_) {}
+      } else {
+        interact();
+      }
+    });
+
+    startBtn.dataset.action = "start";
+    startBtn.addEventListener("click", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      beginGameSession();
+    });
+    startBtn.addEventListener("touchend", e => {
+      e.preventDefault();
+      e.stopPropagation();
+      beginGameSession();
+    }, { passive: false });
+
+    loadSector(0, false);
+    lastTime = performance.now();
+    requestAnimationFrame(loop);
+  </script>
+</body>
+</html>
