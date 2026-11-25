@@ -427,6 +427,15 @@
       joyStick.style.transform = "translate(0px, 0px)";
     }
 
+    function resetTouchControls() {
+      resetJoystick();
+      lookTouch.active = false;
+      lookTouch.id = null;
+      touchSprinting = false;
+      btnSprint.classList.remove("pressed");
+      keysDown = {};
+    }
+
     joyBase.addEventListener("touchstart", e => {
       e.preventDefault();
       e.stopPropagation();
@@ -509,7 +518,7 @@
     btnLight.addEventListener("click", e => {
       e.preventDefault();
       e.stopPropagation();
-      if (running && player.battery > 0) {
+      if (running && player.battery > 0 && !isHiding) {
         player.flashlight = !player.flashlight;
         playTone(900, "square", 0.04, 0.1);
         showToast(player.flashlight ? "FLASHLIGHT ON" : "FLASHLIGHT OFF");
@@ -541,7 +550,7 @@
           if (AC) audioCtx = new AC();
         }
         if (audioCtx && audioCtx.state === "suspended") {
-          audioCtx.resume();
+          audioCtx.resume().catch(() => {});
         }
       } catch (_) {}
     }
@@ -833,6 +842,8 @@
 
     let sectorIndex = 0;
     let running = false;
+    let levelFinished = false;
+    let startingLock = false;
     let jumpscareTimer = 0;
     let pulseWaveTimer = 0;
     let keysDown = {};
@@ -889,13 +900,12 @@
 
       keysCollected = 0;
       isHiding = false;
+      levelFinished = false;
       jumpscareTimer = 0;
       pulseWaveTimer = 0;
       activeInteraction = null;
       promptEl.style.display = "none";
-      resetJoystick();
-      touchSprinting = false;
-      btnSprint.classList.remove("pressed");
+      resetTouchControls();
       updateHUD();
     }
 
@@ -1088,15 +1098,16 @@
     }
 
     function openOverlay(mode) {
+      if (levelFinished) return;
+      levelFinished = true;
       running = false;
       promptEl.style.display = "none";
-      resetJoystick();
-      touchSprinting = false;
-      btnSprint.classList.remove("pressed");
+      resetTouchControls();
       if (document.pointerLockElement && document.exitPointerLock) {
         try { document.exitPointerLock(); } catch (_) {}
       }
       overlay.style.display = "flex";
+      overlay.scrollTop = 0;
 
       if (mode === "nextSector") {
         playSectorClear();
@@ -1128,7 +1139,7 @@
         if (jumpscareTimer <= 0) openOverlay("caught");
         return;
       }
-      if (!running) return;
+      if (!running || levelFinished) return;
 
       for (const key in doorStates) {
         const d = doorStates[key];
@@ -1679,7 +1690,7 @@
       renderRadar();
     }
 
-    let lastTime = 0;
+    let lastTime = performance.now();
     function loop(ts) {
       const dt = Math.min(0.05, Math.max(0, (ts - lastTime) / 1000));
       lastTime = ts;
@@ -1689,6 +1700,10 @@
     }
 
     function beginGameSession() {
+      if (startingLock) return;
+      startingLock = true;
+      setTimeout(() => { startingLock = false; }, 220);
+
       initAudio();
       const action = startBtn.dataset.action || "start";
       if (action === "nextSector") {
@@ -1698,6 +1713,9 @@
       } else {
         loadSector(0, false);
       }
+
+      startBtn.dataset.action = "start";
+      lastTime = performance.now();
       overlay.style.display = "none";
       running = true;
       showToast(SECTORS[sectorIndex].name);
@@ -1756,11 +1774,6 @@
       e.stopPropagation();
       beginGameSession();
     });
-    startBtn.addEventListener("touchend", e => {
-      e.preventDefault();
-      e.stopPropagation();
-      beginGameSession();
-    }, { passive: false });
 
     loadSector(0, false);
     lastTime = performance.now();
