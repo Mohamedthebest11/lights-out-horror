@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LIGHTS OUT 4D // Realistic Quarters & Mobile</title>
+  <title>LIGHTS OUT 4D // Furnished Quarters & Mobile</title>
   <style>
     * {
       box-sizing: border-box;
@@ -344,7 +344,7 @@
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT 4D</h1>
       <p id="ov-desc">
-        Search the <b>Kitchen</b>, <b>Bedroom</b>, <b>Bathroom</b>, and <b>Laundry Room</b> across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br><br>
+        Explore furnished <b>Kitchens</b>, <b>Bedrooms</b>, <b>Bathrooms</b>, and <b>Laundry Rooms</b> across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br><br>
         <b>Mobile:</b> Left joystick to move, drag right screen to look, use <b>W - / W +</b> to shift 4D phase.<br>
         <b>PC:</b> WASD move, Mouse look, <b>Z / X</b> shift 4D phase, R/Click interact, F light, E pulse.
       </p>
@@ -722,7 +722,7 @@
       return 0.0;
     }
 
-    // --- 3 Sectors with Kitchen, Bedroom, Bathroom, Laundry & 4D Phase Coordinates ---
+    // --- 3 Sectors with Rich Furnished Rooms & 4D Phase Coordinates ---
     const SECTORS = [
       {
         name: "SECTOR 1 // RESIDENTIAL WING",
@@ -732,10 +732,10 @@
         chaseSpeed: 3.15,
         patrolSpeed: 1.4,
         rooms: [
-          { name: "KITCHEN", x1: 1, y1: 1, x2: 6, y2: 5 },
-          { name: "BATHROOM", x1: 15, y1: 1, x2: 20, y2: 5 },
-          { name: "BEDROOM", x1: 1, y1: 9, x2: 6, y2: 13 },
-          { name: "LAUNDRY ROOM", x1: 15, y1: 9, x2: 20, y2: 13 }
+          { name: "KITCHEN", type: "kitchen", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "BATHROOM", type: "bathroom", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "BEDROOM", type: "bedroom", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "LAUNDRY ROOM", type: "laundry", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
           { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
@@ -748,10 +748,20 @@
           { x: 19.2, y: 10.5, w: -1.0, loot: "key", opened: false, taken: false }
         ],
         props: [
-          { x: 3.5, y: 3.5, w: -1.0, kind: "stove" },
-          { x: 17.8, y: 3.5, w: 1.0, kind: "sink" },
-          { x: 3.5, y: 10.8, w: -0.9, kind: "bed" },
-          { x: 17.8, y: 10.8, w: 0.9, kind: "washer" }
+          // Kitchen: Island counter, stove, fridge
+          { x: 3.8, y: 3.3, w: -1.0, kind: "island" },
+          { x: 2.0, y: 3.8, w: -1.0, kind: "stove" },
+          { x: 5.5, y: 2.0, w: -1.0, kind: "fridge" },
+          // Bathroom: Vanity sink, mirror, bathtub
+          { x: 17.8, y: 2.0, w: 1.0, kind: "sink" },
+          { x: 18.8, y: 4.2, w: 1.0, kind: "tub" },
+          // Bedroom: Bed + nightstand
+          { x: 3.5, y: 10.5, w: -0.9, kind: "bed" },
+          { x: 5.2, y: 9.8, w: -0.9, kind: "nightstand" },
+          // Laundry Room: Washer, dryer, folding rack
+          { x: 17.5, y: 10.2, w: 0.9, kind: "washer" },
+          { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" },
+          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" }
         ],
         looseItems: [
           { x: 11.0, y: 7.5, w: 0.0, type: "battery", taken: false }
@@ -782,10 +792,10 @@
         chaseSpeed: 3.4,
         patrolSpeed: 1.55,
         rooms: [
-          { name: "MASTER BEDROOM", x1: 1, y1: 1, x2: 6, y2: 5 },
-          { name: "PANTRY KITCHEN", x1: 15, y1: 1, x2: 20, y2: 5 },
-          { name: "ENSUITE BATHROOM", x1: 1, y1: 9, x2: 6, y2: 13 },
-          { name: "LAUNDRY UTILITY", x1: 15, y1: 9, x2: 20, y2: 13 }
+          { name: "MASTER BEDROOM", type: "bedroom", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "PANTRY KITCHEN", type: "kitchen", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "ENSUITE BATHROOM", type: "bathroom", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "LAUNDRY UTILITY", type: "laundry", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
           { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
@@ -798,10 +808,14 @@
           { x: 19.2, y: 10.5, w: -0.8, loot: "battery", opened: false, taken: false }
         ],
         props: [
-          { x: 3.6, y: 3.4, w: -1.0, kind: "bed" },
-          { x: 17.6, y: 3.4, w: 1.0, kind: "stove" },
-          { x: 3.6, y: 10.6, w: -0.9, kind: "sink" },
-          { x: 17.6, y: 10.6, w: 0.9, kind: "washer" }
+          { x: 3.6, y: 3.2, w: -1.0, kind: "bed" },
+          { x: 5.3, y: 2.4, w: -1.0, kind: "nightstand" },
+          { x: 17.8, y: 3.3, w: 1.0, kind: "island" },
+          { x: 19.0, y: 2.0, w: 1.0, kind: "fridge" },
+          { x: 3.5, y: 10.5, w: -0.9, kind: "tub" },
+          { x: 2.0, y: 9.8, w: -0.9, kind: "sink" },
+          { x: 17.6, y: 10.2, w: 0.9, kind: "washer" },
+          { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" }
         ],
         looseItems: [
           { x: 3.5, y: 7.0, w: 0.0, type: "battery", taken: false },
@@ -833,10 +847,10 @@
         chaseSpeed: 3.6,
         patrolSpeed: 1.7,
         rooms: [
-          { name: "CHEF KITCHEN", x1: 1, y1: 1, x2: 6, y2: 5 },
-          { name: "SPA BATHROOM", x1: 15, y1: 1, x2: 20, y2: 5 },
-          { name: "PENTHOUSE BEDROOM", x1: 1, y1: 9, x2: 6, y2: 13 },
-          { name: "LAUNDRY & LINEN", x1: 15, y1: 9, x2: 20, y2: 13 }
+          { name: "CHEF KITCHEN", type: "kitchen", x1: 1, y1: 1, x2: 6, y2: 5 },
+          { name: "SPA BATHROOM", type: "bathroom", x1: 15, y1: 1, x2: 20, y2: 5 },
+          { name: "PENTHOUSE BEDROOM", type: "bedroom", x1: 1, y1: 9, x2: 6, y2: 13 },
+          { name: "LAUNDRY & LINEN", type: "laundry", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
           { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
@@ -849,10 +863,16 @@
           { x: 19.2, y: 10.5, w: -1.0, loot: "key", opened: false, taken: false }
         ],
         props: [
-          { x: 3.6, y: 3.4, w: -1.0, kind: "stove" },
-          { x: 17.6, y: 3.4, w: 1.0, kind: "sink" },
-          { x: 3.6, y: 10.6, w: -0.9, kind: "bed" },
-          { x: 17.6, y: 10.6, w: 0.9, kind: "washer" }
+          { x: 3.6, y: 3.3, w: -1.0, kind: "island" },
+          { x: 2.0, y: 3.8, w: -1.0, kind: "stove" },
+          { x: 5.5, y: 2.0, w: -1.0, kind: "fridge" },
+          { x: 17.8, y: 2.0, w: 1.0, kind: "sink" },
+          { x: 18.8, y: 4.2, w: 1.0, kind: "tub" },
+          { x: 3.6, y: 10.5, w: -0.9, kind: "bed" },
+          { x: 5.2, y: 9.8, w: -0.9, kind: "nightstand" },
+          { x: 17.6, y: 10.2, w: 0.9, kind: "washer" },
+          { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" },
+          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" }
         ],
         looseItems: [
           { x: 11.0, y: 7.0, w: 0.0, type: "battery", taken: false },
@@ -955,15 +975,20 @@
       return SECTORS[sectorIndex].keysNeeded;
     }
 
-    function getCurrentRoomName() {
+    function getCurrentRoom() {
       const sec = SECTORS[sectorIndex];
-      const phaseLabel = player.w < -0.35 ? "ALPHA-W" : (player.w > 0.35 ? "BETA-W" : "BRIDGE-W");
       for (const rm of sec.rooms) {
         if (player.x >= rm.x1 && player.x <= rm.x2 + 1 && player.y >= rm.y1 && player.y <= rm.y2 + 1) {
-          return `${rm.name} // ${phaseLabel}`;
+          return rm;
         }
       }
-      return `MAIN CORRIDOR // ${phaseLabel}`;
+      return null;
+    }
+
+    function getCurrentRoomName() {
+      const rm = getCurrentRoom();
+      const phaseLabel = player.w < -0.35 ? "ALPHA-W" : (player.w > 0.35 ? "BETA-W" : "BRIDGE-W");
+      return `${rm ? rm.name : "MAIN CORRIDOR"} // ${phaseLabel}`;
     }
 
     function triggerPulse() {
@@ -1158,14 +1183,14 @@
         const nextIdx = sectorIndex + 1;
         ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
         ovTitle.style.color = "#2dd4bf";
-        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys across rooms &amp; W-phases).`;
+        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys across furnished rooms &amp; W-phases).`;
         startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
         startBtn.dataset.action = "nextSector";
       } else if (mode === "wonAll") {
         playSectorClear();
         ovTitle.textContent = "4D FACILITY ESCAPED";
         ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You searched every room and escaped all 3 sectors.<br><br>Want to play another full run?";
+        ovDesc.innerHTML = "You searched every furnished room and escaped all 3 sectors.<br><br>Want to play another full run?";
         startBtn.textContent = "PLAY FULL RUN AGAIN";
         startBtn.dataset.action = "restartAll";
       } else {
@@ -1454,59 +1479,142 @@
       rCtx.restore();
     }
 
-    function renderProp3D(pr, screenX, spriteSize, bobOffset) {
-      const baseY = H / 2 + spriteSize * 0.14 + bobOffset;
+    function renderProp3D(pr, screenX, spriteSize, bobOffset, H) {
+      const baseY = H / 2 + spriteSize * 0.16 + bobOffset;
 
       if (pr.kind === "bed") {
-        const bW = spriteSize * 0.72;
-        const bH = spriteSize * 0.34;
+        const bW = spriteSize * 0.76;
+        const bH = spriteSize * 0.38;
         const leftX = screenX - bW / 2;
-        const topY = baseY - bH * 0.35;
+        const topY = baseY - bH * 0.42;
 
-        // Bed frame & mattress
+        // Wooden headboard
+        ctx.fillStyle = "#3b2416";
+        ctx.fillRect(leftX, topY - bH * 0.38, bW, bH * 0.42);
+        // Mattress & duvet
         ctx.fillStyle = "#4b3222";
         ctx.fillRect(leftX, topY, bW, bH);
         ctx.fillStyle = "#cbd5e1";
-        ctx.fillRect(leftX + 3, topY + 2, bW - 6, bH * 0.65);
+        ctx.fillRect(leftX + 3, topY + 2, bW - 6, bH * 0.72);
+        // Blanket stripe
+        ctx.fillStyle = "#64748b";
+        ctx.fillRect(leftX + 3, topY + bH * 0.45, bW - 6, bH * 0.16);
         // Pillows
         ctx.fillStyle = "#f8fafc";
-        ctx.fillRect(leftX + 6, topY + 4, bW * 0.24, bH * 0.28);
-        ctx.fillRect(leftX + bW * 0.34, topY + 4, bW * 0.24, bH * 0.28);
+        ctx.fillRect(leftX + bW * 0.12, topY + 4, bW * 0.28, bH * 0.24);
+        ctx.fillRect(leftX + bW * 0.58, topY + 4, bW * 0.28, bH * 0.24);
+      } else if (pr.kind === "nightstand") {
+        const nW = spriteSize * 0.28;
+        const nH = spriteSize * 0.28;
+        const leftX = screenX - nW / 2;
+        const topY = baseY - nH * 0.55;
+        ctx.fillStyle = "#4a3020";
+        ctx.fillRect(leftX, topY, nW, nH);
+        // Lamp
+        ctx.fillStyle = "#f59e0b";
+        ctx.beginPath();
+        ctx.arc(screenX, topY - nH * 0.16, Math.max(2, nW * 0.22), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (pr.kind === "island") {
+        const iW = spriteSize * 0.74;
+        const iH = spriteSize * 0.36;
+        const leftX = screenX - iW / 2;
+        const topY = baseY - iH * 0.45;
+        // Granite countertop
+        ctx.fillStyle = "#52525b";
+        ctx.fillRect(leftX - 2, topY, iW + 4, iH * 0.22);
+        // Cabinet base
+        ctx.fillStyle = "#d4d4d8";
+        ctx.fillRect(leftX, topY + iH * 0.22, iW, iH * 0.78);
+        ctx.strokeStyle = "#71717a";
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(leftX + 4, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
+        ctx.strokeRect(screenX + 2, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
       } else if (pr.kind === "stove") {
         const sW = spriteSize * 0.56;
-        const sH = spriteSize * 0.44;
+        const sH = spriteSize * 0.46;
         const leftX = screenX - sW / 2;
-        const topY = baseY - sH * 0.45;
+        const topY = baseY - sH * 0.5;
 
-        // Counter & oven body
-        ctx.fillStyle = "#d4d4d8";
+        ctx.fillStyle = "#e4e4e7";
         ctx.fillRect(leftX, topY, sW, sH);
-        ctx.fillStyle = "#27272a";
-        ctx.fillRect(leftX + 4, topY + sH * 0.36, sW - 8, sH * 0.54);
-        // Burners
         ctx.fillStyle = "#18181b";
+        ctx.fillRect(leftX + 4, topY + sH * 0.38, sW - 8, sH * 0.52);
+        ctx.fillStyle = "#ef4444";
         ctx.beginPath();
-        ctx.arc(leftX + sW * 0.28, topY + sH * 0.16, Math.max(2, sW * 0.08), 0, Math.PI * 2);
-        ctx.arc(leftX + sW * 0.72, topY + sH * 0.16, Math.max(2, sW * 0.08), 0, Math.PI * 2);
+        ctx.arc(leftX + sW * 0.28, topY + sH * 0.16, Math.max(2, sW * 0.07), 0, Math.PI * 2);
+        ctx.arc(leftX + sW * 0.72, topY + sH * 0.16, Math.max(2, sW * 0.07), 0, Math.PI * 2);
         ctx.fill();
+      } else if (pr.kind === "fridge") {
+        const fW = spriteSize * 0.44;
+        const fH = spriteSize * 0.78;
+        const leftX = screenX - fW / 2;
+        const topY = baseY - fH * 0.82;
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillRect(leftX, topY, fW, fH);
+        ctx.strokeStyle = "#475569";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(leftX, topY, fW, fH);
+        // Freezer line & handle
+        ctx.beginPath();
+        ctx.moveTo(leftX, topY + fH * 0.3);
+        ctx.lineTo(leftX + fW, topY + fH * 0.3);
+        ctx.stroke();
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.12, 3, fH * 0.12);
+        ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.38, 3, fH * 0.18);
       } else if (pr.kind === "sink") {
         const vW = spriteSize * 0.52;
-        const vH = spriteSize * 0.4;
+        const vH = spriteSize * 0.42;
         const leftX = screenX - vW / 2;
-        const topY = baseY - vH * 0.4;
+        const topY = baseY - vH * 0.45;
 
-        // Bathroom vanity & basin
+        // Wall mirror above sink
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(leftX + vW * 0.15, topY - vH * 0.75, vW * 0.7, vH * 0.55);
+        // Vanity & basin
+        ctx.fillStyle = "#f1f5f9";
+        ctx.fillRect(leftX, topY, vW, vH * 0.32);
+        ctx.fillStyle = "#64748b";
+        ctx.fillRect(leftX + 3, topY + vH * 0.32, vW - 6, vH * 0.68);
+      } else if (pr.kind === "tub") {
+        const tW = spriteSize * 0.74;
+        const tH = spriteSize * 0.36;
+        const leftX = screenX - tW / 2;
+        const topY = baseY - tH * 0.42;
+
+        ctx.fillStyle = "#f8fafc";
+        ctx.fillRect(leftX, topY, tW, tH);
+        ctx.fillStyle = "#0ea5e9";
+        ctx.fillRect(leftX + 5, topY + 4, tW - 10, tH * 0.45);
+      } else if (pr.kind === "dryer") {
+        const dBox = spriteSize * 0.42;
+        const leftX = screenX - dBox / 2;
+        const topY = baseY - dBox * 0.52;
+        ctx.fillStyle = "#d4d4d8";
+        ctx.fillRect(leftX, topY, dBox, dBox);
+        ctx.strokeStyle = "#52525b";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(leftX, topY, dBox, dBox);
+        ctx.fillStyle = "#1e293b";
+        ctx.beginPath();
+        ctx.arc(screenX, topY + dBox * 0.56, Math.max(3, dBox * 0.24), 0, Math.PI * 2);
+        ctx.fill();
+      } else if (pr.kind === "rack") {
+        const rW = spriteSize * 0.5;
+        const rH = spriteSize * 0.55;
+        const leftX = screenX - rW / 2;
+        const topY = baseY - rH * 0.65;
+        ctx.fillStyle = "#78350f";
+        ctx.fillRect(leftX, topY, rW, 5);
+        ctx.fillRect(leftX, topY + rH * 0.45, rW, 5);
         ctx.fillStyle = "#e2e8f0";
-        ctx.fillRect(leftX, topY, vW, vH * 0.35);
-        ctx.fillStyle = "#94a3b8";
-        ctx.fillRect(leftX + vW * 0.18, topY + topY * 0 ? topY + vH * 0.08 : topY + vH * 0.08, vW * 0.64, vH * 0.18);
-        ctx.fillStyle = "#475569";
-        ctx.fillRect(leftX + 3, topY + vH * 0.35, vW - 6, vH * 0.65);
+        ctx.fillRect(leftX + 6, topY - 6, rW * 0.35, 6);
       } else {
         // Washing machine
-        const wBox = spriteSize * 0.44;
+        const wBox = spriteSize * 0.42;
         const leftX = screenX - wBox / 2;
-        const topY = baseY - wBox * 0.5;
+        const topY = baseY - wBox * 0.52;
 
         ctx.fillStyle = "#e4e4e7";
         ctx.fillRect(leftX, topY, wBox, wBox);
@@ -1548,6 +1656,7 @@
 
       const bobOffset = Math.sin(bobTimer) * 8;
       const horizonY = H / 2 + bobOffset;
+      const curRoom = getCurrentRoom();
 
       const flicker = player.flashlight && player.battery > 0 && !isHiding
         ? (player.battery < 18 && Math.random() < 0.25 ? 0.45 : 1)
@@ -1560,10 +1669,37 @@
       ctx.fillRect(0, 0, W, horizonY);
 
       const floorGrad = ctx.createLinearGradient(0, horizonY, 0, H);
-      floorGrad.addColorStop(0, "#040406");
-      floorGrad.addColorStop(1, flicker > 0 ? "#16262b" : "#090a0e");
+      if (curRoom && curRoom.type === "kitchen") {
+        floorGrad.addColorStop(0, "#101214");
+        floorGrad.addColorStop(1, flicker > 0 ? "#282d33" : "#121518");
+      } else if (curRoom && curRoom.type === "bedroom") {
+        floorGrad.addColorStop(0, "#140e0a");
+        floorGrad.addColorStop(1, flicker > 0 ? "#362317" : "#1a110b");
+      } else if (curRoom && curRoom.type === "bathroom") {
+        floorGrad.addColorStop(0, "#0c1418");
+        floorGrad.addColorStop(1, flicker > 0 ? "#1f353f" : "#0e191e");
+      } else if (curRoom && curRoom.type === "laundry") {
+        floorGrad.addColorStop(0, "#111215");
+        floorGrad.addColorStop(1, flicker > 0 ? "#242830" : "#121418");
+      } else {
+        floorGrad.addColorStop(0, "#040406");
+        floorGrad.addColorStop(1, flicker > 0 ? "#16262b" : "#090a0e");
+      }
       ctx.fillStyle = floorGrad;
       ctx.fillRect(0, horizonY, W, H - horizonY);
+
+      // Floor grid lines for room realism
+      if (horizonY < H - 4) {
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.045)";
+        ctx.lineWidth = 1;
+        for (let row = 1; row <= 6; row++) {
+          const fy = horizonY + Math.pow(row / 6, 1.55) * (H - horizonY);
+          ctx.beginPath();
+          ctx.moveTo(0, fy);
+          ctx.lineTo(W, fy);
+          ctx.stroke();
+        }
+      }
 
       const FOV = Math.PI / 3;
       const dirX = Math.cos(player.angle);
@@ -1772,10 +1908,10 @@
           ctx.fillRect(leftX - cW * 0.15, topY, cW * 1.3, cH);
 
         } else if (obj.kind === "prop") {
-          renderProp3D(obj.data, screenX, spriteSize, bobOffset);
+          renderProp3D(obj.data, screenX, spriteSize, bobOffset, H);
           const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
           ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
-          ctx.fillRect(screenX - spriteSize * 0.4, H / 2 - spriteSize * 0.25 + bobOffset, spriteSize * 0.8, spriteSize * 0.75);
+          ctx.fillRect(screenX - spriteSize * 0.45, H / 2 - spriteSize * 0.35 + bobOffset, spriteSize * 0.9, spriteSize * 0.85);
 
         } else if (obj.kind === "monster") {
           const mW = spriteSize * 0.55;
