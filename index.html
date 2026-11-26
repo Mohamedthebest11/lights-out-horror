@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LIGHTS OUT 3D // Full Facility & Mobile</title>
+  <title>LIGHTS OUT 4D // Phase Dimension & Mobile</title>
   <style>
     * {
       box-sizing: border-box;
@@ -38,8 +38,8 @@
       background: #0c0c10;
       border: 1px solid #27272a;
       border-bottom: none;
-      font-size: clamp(0.7rem, 2vw, 0.88rem);
-      letter-spacing: 0.6px;
+      font-size: clamp(0.68rem, 1.9vw, 0.86rem);
+      letter-spacing: 0.5px;
     }
     .danger { color: #ef4444; font-weight: bold; }
     .good { color: #22c55e; }
@@ -47,6 +47,7 @@
     .sector-tag { color: #c084fc; font-weight: bold; }
     .pulse-ready { color: #38bdf8; font-weight: bold; }
     .hide-tag { color: #a78bfa; font-weight: bold; }
+    .w-tag { color: #2dd4bf; font-weight: bold; }
 
     #wrap {
       position: relative;
@@ -81,7 +82,7 @@
       top: 57%;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(10, 10, 14, 0.9);
+      background: rgba(10, 10, 14, 0.92);
       border: 1px solid rgba(250, 204, 21, 0.45);
       color: #fef08a;
       padding: 6px 14px;
@@ -98,9 +99,9 @@
       bottom: 14px;
       left: 50%;
       transform: translateX(-50%);
-      background: rgba(15, 15, 22, 0.9);
-      border: 1px solid rgba(192, 132, 252, 0.45);
-      color: #e9d5ff;
+      background: rgba(15, 15, 22, 0.92);
+      border: 1px solid rgba(45, 212, 191, 0.45);
+      color: #99f6e4;
       padding: 5px 12px;
       font-size: clamp(0.68rem, 1.8vw, 0.8rem);
       border-radius: 4px;
@@ -115,11 +116,11 @@
       top: 12px;
       left: 14px;
       background: rgba(10, 10, 14, 0.78);
-      border-left: 3px solid #c084fc;
+      border-left: 3px solid #2dd4bf;
       padding: 4px 10px;
       font-size: clamp(0.68rem, 1.9vw, 0.82rem);
       color: #e4e4e7;
-      letter-spacing: 1.3px;
+      letter-spacing: 1.2px;
       pointer-events: none;
       z-index: 5;
     }
@@ -151,7 +152,7 @@
       height: clamp(82px, 13vw, 112px);
       border-radius: 50%;
       background: rgba(8, 12, 10, 0.8);
-      border: 1px solid rgba(34, 197, 94, 0.45);
+      border: 1px solid rgba(45, 212, 191, 0.45);
       box-shadow: 0 0 18px rgba(0, 0, 0, 0.85);
       pointer-events: none;
       z-index: 5;
@@ -206,26 +207,26 @@
       right: 16px;
       bottom: 18px;
       display: grid;
-      grid-template-columns: repeat(2, 66px);
-      gap: 9px;
+      grid-template-columns: repeat(3, 56px);
+      gap: 7px;
       pointer-events: auto;
     }
     .m-btn {
-      width: 66px;
-      height: 52px;
-      border-radius: 10px;
-      background: rgba(18, 18, 24, 0.75);
+      width: 56px;
+      height: 48px;
+      border-radius: 9px;
+      background: rgba(18, 18, 24, 0.78);
       border: 1.5px solid rgba(255, 255, 255, 0.28);
       color: #f4f4f5;
       font-family: inherit;
-      font-size: 0.7rem;
+      font-size: 0.65rem;
       font-weight: bold;
-      letter-spacing: 0.5px;
+      letter-spacing: 0.4px;
       display: flex;
       align-items: center;
       justify-content: center;
       text-align: center;
-      padding: 4px;
+      padding: 3px;
       box-shadow: 0 4px 12px rgba(0, 0, 0, 0.65);
       touch-action: manipulation;
     }
@@ -241,6 +242,10 @@
     #btn-pulse {
       border-color: rgba(56, 189, 248, 0.65);
       color: #7dd3fc;
+    }
+    .w-btn {
+      border-color: rgba(45, 212, 191, 0.65);
+      color: #5eead4;
     }
 
     /* --- Stable Mobile & Desktop Overlay --- */
@@ -258,13 +263,13 @@
     }
     #overlay h1 {
       font-size: clamp(1.4rem, 5vw, 2.4rem);
-      color: #ef4444;
+      color: #2dd4bf;
       letter-spacing: 4px;
       margin-bottom: 10px;
-      text-shadow: 0 0 18px rgba(239, 68, 68, 0.6);
+      text-shadow: 0 0 18px rgba(45, 212, 191, 0.55);
     }
     #overlay p {
-      max-width: 620px;
+      max-width: 640px;
       line-height: 1.5;
       color: #a1a1aa;
       margin-bottom: 18px;
@@ -272,9 +277,9 @@
     }
     #start-btn {
       flex-shrink: 0;
-      background: #ef4444;
+      background: #2dd4bf;
       color: #040406;
-      border: 2px solid #fca5a5;
+      border: 2px solid #99f6e4;
       padding: 12px 26px;
       font-family: inherit;
       font-weight: bold;
@@ -283,17 +288,17 @@
       cursor: pointer;
       border-radius: 5px;
       touch-action: manipulation;
-      box-shadow: 0 0 20px rgba(239, 68, 68, 0.45);
+      box-shadow: 0 0 20px rgba(45, 212, 191, 0.45);
     }
     #start-btn:hover, #start-btn:active {
-      background: #f87171;
+      background: #5eead4;
       transform: scale(1.02);
     }
     #controls {
       width: min(900px, 100%);
       text-align: center;
       margin-top: 8px;
-      font-size: 0.76rem;
+      font-size: 0.74rem;
       color: #71717a;
     }
     body.touch-mode #controls {
@@ -304,6 +309,7 @@
 <body>
   <div id="hud">
     <div>SEC: <span id="sec-ui" class="sector-tag">1/3</span></div>
+    <div>4D-W: <span id="w-ui" class="w-tag">-1.00</span></div>
     <div>KEYS: <span id="keys-ui" class="warn">0/3</span></div>
     <div>BAT: <span id="bat-ui" class="good">100%</span></div>
     <div>STAM: <span id="stam-ui" class="good">100%</span></div>
@@ -313,20 +319,22 @@
 
   <div id="wrap">
     <canvas id="game" width="900" height="540"></canvas>
-    <div id="room-banner">MAIN CORRIDOR</div>
+    <div id="room-banner">MAIN CORRIDOR // W:-1.0</div>
     <button id="touch-toggle" type="button">TOUCH UI</button>
     <div id="prompt">[R / CLICK] OPEN CLOSET</div>
-    <div id="toast">FOUND KEY!</div>
+    <div id="toast">4D PHASE SHIFTED</div>
     <canvas id="radar" width="112" height="112"></canvas>
     <div id="crosshair"></div>
 
-    <!-- Mobile Virtual Joystick & Action Buttons -->
+    <!-- Mobile Virtual Joystick & 4D Action Buttons -->
     <div id="mobile-controls">
       <div id="joy-base">
         <div id="joy-stick"></div>
       </div>
       <div id="mobile-buttons">
         <button id="btn-interact" class="m-btn" type="button">OPEN /<br>TAKE</button>
+        <button id="btn-w-down" class="m-btn w-btn" type="button">W -</button>
+        <button id="btn-w-up" class="m-btn w-btn" type="button">W +</button>
         <button id="btn-sprint" class="m-btn" type="button">SPRINT</button>
         <button id="btn-light" class="m-btn" type="button">LIGHT</button>
         <button id="btn-pulse" class="m-btn" type="button">PULSE</button>
@@ -334,17 +342,17 @@
     </div>
 
     <div id="overlay">
-      <h1 id="ov-title">LIGHTS OUT 3D</h1>
+      <h1 id="ov-title">LIGHTS OUT 4D</h1>
       <p id="ov-desc">
-        Explore the facility's <b>Rooms</b>, open doors, and search inside <b>Closets</b> for Security Keys &amp; Batteries. Empty opened closets can be used to <b>hide</b> when it hunts.<br><br>
-        <b>Mobile:</b> Left joystick to move, drag right screen to look, tap buttons to interact/sprint/pulse.<br>
-        <b>PC:</b> WASD to move, Mouse to look (click screen), Shift to sprint, R/Click to open, F for light, E for pulse.
+        Navigate rooms across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>. Some closets and barriers phase in only when your <b>4D-W</b> matches their phase.<br><br>
+        <b>Mobile:</b> Left joystick to move, drag right screen to look, use <b>W - / W +</b> to shift 4D phase.<br>
+        <b>PC:</b> WASD move, Mouse look, <b>Z / X</b> shift 4D phase, R/Click interact, F light, E pulse.
       </p>
       <button id="start-btn" type="button">START SECTOR 1</button>
     </div>
   </div>
 
-  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse &nbsp;|&nbsp; OPEN / TAKE: R or Click &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; LIGHT: F</div>
+  <div id="controls">MOVE: WASD &nbsp;|&nbsp; LOOK: Mouse &nbsp;|&nbsp; 4D PHASE: Z / X &nbsp;|&nbsp; OPEN / TAKE: R or Click &nbsp;|&nbsp; SPRINT: Shift &nbsp;|&nbsp; PULSE: E &nbsp;|&nbsp; LIGHT: F</div>
 
   <script>
     const canvas = document.getElementById("game");
@@ -363,6 +371,7 @@
     const touchToggleBtn = document.getElementById("touch-toggle");
 
     const secUi = document.getElementById("sec-ui");
+    const wUi = document.getElementById("w-ui");
     const keysUi = document.getElementById("keys-ui");
     const batUi = document.getElementById("bat-ui");
     const stamUi = document.getElementById("stam-ui");
@@ -401,6 +410,7 @@
     const joyState = { active: false, id: null, x: 0, y: 0 };
     const lookTouch = { active: false, id: null, lastX: 0 };
     let touchSprinting = false;
+    let touchWDir = 0;
 
     function updateJoystickVisual(dx, dy, maxR) {
       const dist = Math.hypot(dx, dy);
@@ -427,7 +437,10 @@
       lookTouch.active = false;
       lookTouch.id = null;
       touchSprinting = false;
+      touchWDir = 0;
       btnSprint.classList.remove("pressed");
+      btnWDown.classList.remove("pressed");
+      btnWUp.classList.remove("pressed");
       keysDown = {};
     }
 
@@ -500,6 +513,8 @@
     wrap.addEventListener("touchcancel", handleLookEnd);
 
     const btnInteract = document.getElementById("btn-interact");
+    const btnWDown = document.getElementById("btn-w-down");
+    const btnWUp = document.getElementById("btn-w-up");
     const btnSprint = document.getElementById("btn-sprint");
     const btnLight = document.getElementById("btn-light");
     const btnPulse = document.getElementById("btn-pulse");
@@ -526,6 +541,16 @@
       triggerPulse();
     });
 
+    btnWDown.addEventListener("pointerdown", e => {
+      e.stopPropagation();
+      touchWDir = -1;
+      btnWDown.classList.add("pressed");
+    });
+    btnWUp.addEventListener("pointerdown", e => {
+      e.stopPropagation();
+      touchWDir = 1;
+      btnWUp.classList.add("pressed");
+    });
     btnSprint.addEventListener("pointerdown", e => {
       e.stopPropagation();
       touchSprinting = true;
@@ -533,7 +558,10 @@
     });
     window.addEventListener("pointerup", () => {
       touchSprinting = false;
+      touchWDir = 0;
       btnSprint.classList.remove("pressed");
+      btnWDown.classList.remove("pressed");
+      btnWUp.classList.remove("pressed");
     });
 
     // --- Procedural Web Audio (Safe on All Browsers) ---
@@ -564,6 +592,10 @@
         osc.start();
         osc.stop(audioCtx.currentTime + duration);
       } catch (_) {}
+    }
+
+    function playPhaseTick(wVal) {
+      playTone(260 + (wVal + 1) * 190, "sine", 0.05, 0.06);
     }
 
     function playDoorSound(opening = true) {
@@ -679,13 +711,25 @@
       g.fillRect(TEX_SIZE - 96, 252, 26, 10);
     });
 
-    // --- 3 Sectors with Rooms, Closets, Furniture Props & Loose Items ---
+    // --- 4D Phase Visibility Helper ---
+    // w = -1.0 is Alpha Phase, w = +1.0 is Beta Phase, w = 0.0 is Hyper-Bridge
+    const PHASE_TOLERANCE = 0.55;
+    function getPhaseVisibility(objW, playerW) {
+      if (objW === undefined || objW === null) return 1.0;
+      const diff = Math.abs(objW - playerW);
+      if (diff <= PHASE_TOLERANCE) {
+        return Math.min(1.0, 1.25 - diff * 0.45);
+      }
+      return 0.0;
+    }
+
+    // --- 3 Sectors with 4D Phase Coordinates (w) ---
     const SECTORS = [
       {
         name: "SECTOR 1 // EAST WING",
         keysNeeded: 3,
-        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
-        monsterStart: { x: 11.0, y: 2.5 },
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2, w: -1.0 },
+        monsterStart: { x: 11.0, y: 2.5, w: -0.8 },
         chaseSpeed: 3.15,
         patrolSpeed: 1.4,
         rooms: [
@@ -695,23 +739,23 @@
           { name: "ARCHIVE ROOM", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
-          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
-          { x: 4.8, y: 1.6, loot: "empty", opened: false, taken: false },
-          { x: 16.5, y: 1.6, loot: "battery", opened: false, taken: false },
-          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
-          { x: 2.2, y: 12.2, loot: "empty", opened: false, taken: false },
-          { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
-          { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
-          { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+          { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, w: -0.9, loot: "empty", opened: false, taken: false },
+          { x: 16.5, y: 1.6, w: 0.9, loot: "battery", opened: false, taken: false },
+          { x: 19.2, y: 3.2, w: 1.0, loot: "key", opened: false, taken: false },
+          { x: 2.2, y: 12.2, w: -0.8, loot: "empty", opened: false, taken: false },
+          { x: 4.8, y: 12.2, w: 0.8, loot: "battery", opened: false, taken: false },
+          { x: 16.5, y: 12.2, w: 1.0, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 10.5, w: -1.0, loot: "key", opened: false, taken: false }
         ],
         props: [
-          { x: 3.5, y: 3.5, kind: "desk" },
-          { x: 17.8, y: 3.5, kind: "crate" },
-          { x: 3.5, y: 10.8, kind: "crate" },
-          { x: 17.8, y: 10.8, kind: "desk" }
+          { x: 3.5, y: 3.5, w: -1.0, kind: "desk" },
+          { x: 17.8, y: 3.5, w: 1.0, kind: "crate" },
+          { x: 3.5, y: 10.8, w: -0.9, kind: "crate" },
+          { x: 17.8, y: 10.8, w: 0.9, kind: "desk" }
         ],
         looseItems: [
-          { x: 11.0, y: 7.5, type: "battery", taken: false }
+          { x: 11.0, y: 7.5, w: 0.0, type: "battery", taken: false }
         ],
         map: [
           [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
@@ -734,8 +778,8 @@
       {
         name: "SECTOR 2 // RESEARCH QUARTERS",
         keysNeeded: 4,
-        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
-        monsterStart: { x: 11.0, y: 2.0 },
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2, w: -1.0 },
+        monsterStart: { x: 11.0, y: 2.0, w: 0.9 },
         chaseSpeed: 3.4,
         patrolSpeed: 1.55,
         rooms: [
@@ -745,24 +789,24 @@
           { name: "LOCKER BAY", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
-          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
-          { x: 4.8, y: 1.6, loot: "battery", opened: false, taken: false },
-          { x: 16.5, y: 1.6, loot: "empty", opened: false, taken: false },
-          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
-          { x: 2.2, y: 12.2, loot: "key", opened: false, taken: false },
-          { x: 4.8, y: 12.2, loot: "empty", opened: false, taken: false },
-          { x: 16.5, y: 12.2, loot: "key", opened: false, taken: false },
-          { x: 19.2, y: 10.5, loot: "battery", opened: false, taken: false }
+          { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, w: 0.9, loot: "battery", opened: false, taken: false },
+          { x: 16.5, y: 1.6, w: 1.0, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 3.2, w: 0.85, loot: "key", opened: false, taken: false },
+          { x: 2.2, y: 12.2, w: -0.9, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 12.2, w: -1.0, loot: "empty", opened: false, taken: false },
+          { x: 16.5, y: 12.2, w: 1.0, loot: "key", opened: false, taken: false },
+          { x: 19.2, y: 10.5, w: -0.8, loot: "battery", opened: false, taken: false }
         ],
         props: [
-          { x: 3.6, y: 3.4, kind: "desk" },
-          { x: 17.6, y: 3.4, kind: "desk" },
-          { x: 3.6, y: 10.6, kind: "crate" },
-          { x: 17.6, y: 10.6, kind: "crate" }
+          { x: 3.6, y: 3.4, w: -1.0, kind: "desk" },
+          { x: 17.6, y: 3.4, w: 1.0, kind: "desk" },
+          { x: 3.6, y: 10.6, w: -0.9, kind: "crate" },
+          { x: 17.6, y: 10.6, w: 0.9, kind: "crate" }
         ],
         looseItems: [
-          { x: 3.5, y: 7.0, type: "battery", taken: false },
-          { x: 18.5, y: 7.0, type: "battery", taken: false }
+          { x: 3.5, y: 7.0, w: 0.0, type: "battery", taken: false },
+          { x: 18.5, y: 7.0, w: 1.0, type: "battery", taken: false }
         ],
         map: [
           [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
@@ -785,8 +829,8 @@
       {
         name: "SECTOR 3 // CONTAINMENT VAULT",
         keysNeeded: 5,
-        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2 },
-        monsterStart: { x: 11.0, y: 2.0 },
+        playerStart: { x: 11.0, y: 13.5, angle: -Math.PI / 2, w: -1.0 },
+        monsterStart: { x: 11.0, y: 2.0, w: 1.0 },
         chaseSpeed: 3.6,
         patrolSpeed: 1.7,
         rooms: [
@@ -796,24 +840,24 @@
           { name: "REACTOR CORE", x1: 15, y1: 9, x2: 20, y2: 13 }
         ],
         closets: [
-          { x: 2.2, y: 1.6, loot: "key", opened: false, taken: false },
-          { x: 4.8, y: 1.6, loot: "key", opened: false, taken: false },
-          { x: 16.5, y: 1.6, loot: "battery", opened: false, taken: false },
-          { x: 19.2, y: 3.2, loot: "key", opened: false, taken: false },
-          { x: 2.2, y: 12.2, loot: "key", opened: false, taken: false },
-          { x: 4.8, y: 12.2, loot: "battery", opened: false, taken: false },
-          { x: 16.5, y: 12.2, loot: "empty", opened: false, taken: false },
-          { x: 19.2, y: 10.5, loot: "key", opened: false, taken: false }
+          { x: 2.2, y: 1.6, w: -1.0, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 1.6, w: 1.0, loot: "key", opened: false, taken: false },
+          { x: 16.5, y: 1.6, w: 0.9, loot: "battery", opened: false, taken: false },
+          { x: 19.2, y: 3.2, w: 1.0, loot: "key", opened: false, taken: false },
+          { x: 2.2, y: 12.2, w: -0.9, loot: "key", opened: false, taken: false },
+          { x: 4.8, y: 12.2, w: -1.0, loot: "battery", opened: false, taken: false },
+          { x: 16.5, y: 12.2, w: 1.0, loot: "empty", opened: false, taken: false },
+          { x: 19.2, y: 10.5, w: -1.0, loot: "key", opened: false, taken: false }
         ],
         props: [
-          { x: 3.6, y: 3.4, kind: "desk" },
-          { x: 17.6, y: 3.4, kind: "crate" },
-          { x: 3.6, y: 10.6, kind: "crate" },
-          { x: 17.6, y: 10.6, kind: "desk" }
+          { x: 3.6, y: 3.4, w: -1.0, kind: "desk" },
+          { x: 17.6, y: 3.4, w: 1.0, kind: "crate" },
+          { x: 3.6, y: 10.6, w: -0.9, kind: "crate" },
+          { x: 17.6, y: 10.6, w: 0.9, kind: "desk" }
         ],
         looseItems: [
-          { x: 11.0, y: 7.0, type: "battery", taken: false },
-          { x: 3.5, y: 7.0, type: "battery", taken: false }
+          { x: 11.0, y: 7.0, w: 0.0, type: "battery", taken: false },
+          { x: 3.5, y: 7.0, w: 1.0, type: "battery", taken: false }
         ],
         map: [
           [1,1,1,1,1,1,1,1,1,1,1,2,1,1,1,1,1,1,1,1,1,1],
@@ -848,7 +892,7 @@
     let closets = [];
     let props = [];
     let sprites = [];
-    let player, monster, keysCollected, isHiding = false, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0;
+    let player, monster, keysCollected, isHiding = false, bobTimer = 0, footstepTimer = 0, monsterStepTimer = 0, wSoundTimer = 0;
     let activeInteraction = null;
 
     function loadSector(idx, preserveBattery = true) {
@@ -870,6 +914,7 @@
         x: sec.playerStart.x,
         y: sec.playerStart.y,
         angle: sec.playerStart.angle,
+        w: sec.playerStart.w ?? -1.0,
         walkSpeed: 2.5,
         sprintSpeed: 4.0,
         stamina: 100,
@@ -881,6 +926,7 @@
       monster = {
         x: sec.monsterStart.x,
         y: sec.monsterStart.y,
+        w: sec.monsterStart.w ?? -0.8,
         patrolSpeed: sec.patrolSpeed,
         chaseSpeed: sec.chaseSpeed,
         chasing: false,
@@ -912,12 +958,13 @@
 
     function getCurrentRoomName() {
       const sec = SECTORS[sectorIndex];
+      const phaseLabel = player.w < -0.35 ? "ALPHA-W" : (player.w > 0.35 ? "BETA-W" : "BRIDGE-W");
       for (const rm of sec.rooms) {
         if (player.x >= rm.x1 && player.x <= rm.x2 + 1 && player.y >= rm.y1 && player.y <= rm.y2 + 1) {
-          return rm.name;
+          return `${rm.name} // ${phaseLabel}`;
         }
       }
-      return "MAIN CORRIDOR";
+      return `MAIN CORRIDOR // ${phaseLabel}`;
     }
 
     function triggerPulse() {
@@ -925,14 +972,15 @@
       player.pulseCooldown = 10;
       pulseWaveTimer = 0.65;
       playPulseSound();
-      showToast("EMP PULSE FIRED!");
+      showToast("4D EMP PULSE FIRED!");
 
       const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
-      if (dist < 6.8) {
+      const wDiff = Math.abs(player.w - monster.w);
+      if (dist < 6.8 && wDiff < 1.2) {
         monster.stunTimer = 2.8;
         monster.chasing = false;
         monster.memoryTimer = 0;
-        showToast("ENTITY STUNNED!");
+        showToast("4D ENTITY STUNNED!");
       }
       updateHUD();
     }
@@ -942,13 +990,14 @@
       const sin = Math.sin(player.angle);
 
       for (const cl of closets) {
+        if (getPhaseVisibility(cl.w, player.w) <= 0.15) continue;
         const dx = cl.x - player.x;
         const dy = cl.y - player.y;
         const dist = Math.hypot(dx, dy);
         if (dist < 1.7) {
           const dot = (dx / dist) * cos + (dy / dist) * sin;
           if (dot > 0.74) {
-            if (!cl.opened) return { type: "closet", obj: cl, label: "OPEN CLOSET" };
+            if (!cl.opened) return { type: "closet", obj: cl, label: "OPEN 4D CLOSET" };
             if (!cl.taken && cl.loot !== "empty") {
               const itemName = cl.loot === "key" ? "TAKE SECURITY KEY" : "TAKE BATTERY";
               return { type: "closetLoot", obj: cl, label: itemName };
@@ -1022,6 +1071,7 @@
     function updateHUD() {
       const needed = getKeysNeeded();
       secUi.textContent = `${sectorIndex + 1}/${SECTORS.length}`;
+      wUi.textContent = `${player.w >= 0 ? "+" : ""}${player.w.toFixed(2)}`;
       keysUi.textContent = `${keysCollected}/${needed}`;
       keysUi.className = keysCollected >= needed ? "good" : "warn";
 
@@ -1042,7 +1092,7 @@
       }
     }
 
-    function isBlocked(x, y, isMonster = false) {
+    function isBlocked(x, y, isMonster = false, checkW = player.w) {
       const gx = Math.floor(x);
       const gy = Math.floor(y);
       if (gy < 0 || gy >= mapGrid.length || gx < 0 || gx >= mapGrid[0].length) return true;
@@ -1061,21 +1111,21 @@
         }
       }
       for (const cl of closets) {
-        if (Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
+        if (getPhaseVisibility(cl.w, checkW) > 0.15 && Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
       }
       for (const pr of props) {
-        if (Math.hypot(x - pr.x, y - pr.y) < 0.34) return true;
+        if (getPhaseVisibility(pr.w, checkW) > 0.15 && Math.hypot(x - pr.x, y - pr.y) < 0.34) return true;
       }
       return false;
     }
 
-    function moveWithSlide(ent, dx, dy, pad = 0.21, isMonster = false) {
-      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad, isMonster) &&
-          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad, isMonster)) {
+    function moveWithSlide(ent, dx, dy, pad = 0.21, isMonster = false, checkW = player.w) {
+      if (!isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y - pad, isMonster, checkW) &&
+          !isBlocked(ent.x + dx + Math.sign(dx) * pad, ent.y + pad, isMonster, checkW)) {
         ent.x += dx;
       }
-      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad, isMonster) &&
-          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad, isMonster)) {
+      if (!isBlocked(ent.x - pad, ent.y + dy + Math.sign(dy) * pad, isMonster, checkW) &&
+          !isBlocked(ent.x + pad, ent.y + dy + Math.sign(dy) * pad, isMonster, checkW)) {
         ent.y += dy;
       }
     }
@@ -1108,21 +1158,21 @@
         playSectorClear();
         const nextIdx = sectorIndex + 1;
         ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
-        ovTitle.style.color = "#c084fc";
-        ovDesc.innerHTML = `You unlocked the sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys hidden inside room closets).`;
+        ovTitle.style.color = "#2dd4bf";
+        ovDesc.innerHTML = `You unlocked the 4D sector exit.<br><br>Next up: <b>${SECTORS[nextIdx].name}</b> (${SECTORS[nextIdx].keysNeeded} keys across Alpha/Beta W-phases).`;
         startBtn.textContent = `ENTER SECTOR ${nextIdx + 1}`;
         startBtn.dataset.action = "nextSector";
       } else if (mode === "wonAll") {
         playSectorClear();
-        ovTitle.textContent = "FACILITY ESCAPED";
+        ovTitle.textContent = "4D FACILITY ESCAPED";
         ovTitle.style.color = "#22c55e";
-        ovDesc.innerHTML = "You searched every room and escaped all 3 sectors.<br><br>Want to play another full run?";
-        startBtn.textContent = "PLAY FULL RUN AGAIN";
+        ovDesc.innerHTML = "You mastered the 4th dimension and escaped all 3 sectors.<br><br>Want to play another 4D run?";
+        startBtn.textContent = "PLAY FULL 4D RUN AGAIN";
         startBtn.dataset.action = "restartAll";
       } else {
         ovTitle.textContent = "IT CAUGHT YOU";
         ovTitle.style.color = "#ef4444";
-        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Hide in empty opened closets, shut room doors, or fire a stun pulse when it gets close.`;
+        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Shift <b>W</b> (Z/X or W-/W+) to slip into another 4D phase or reach hidden closets.`;
         startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
         startBtn.dataset.action = "retrySector";
       }
@@ -1150,14 +1200,25 @@
         const target = d.open ? 1 : 0;
         d.progress += (target - d.progress) * Math.min(1, dt * 9);
       }
-      for (const cl of closets) {
-        if (cl.opened && cl.openAnim < 1) {
-          cl.openAnim = Math.min(1, cl.openAnim + dt * 5);
-        }
-      }
 
       if (player.pulseCooldown > 0) player.pulseCooldown = Math.max(0, player.pulseCooldown - dt);
       if (pulseWaveTimer > 0) pulseWaveTimer = Math.max(0, pulseWaveTimer - dt);
+
+      // 4D W-Axis Shifting
+      let wShift = touchWDir;
+      if (keysDown["z"]) wShift -= 1;
+      if (keysDown["x"]) wShift += 1;
+      if (wShift !== 0 && !isHiding) {
+        const prevW = player.w;
+        player.w = Math.max(-1.0, Math.min(1.0, player.w + wShift * 1.45 * dt));
+        if (Math.abs(player.w - prevW) > 0.002) {
+          wSoundTimer -= dt * 8;
+          if (wSoundTimer <= 0) {
+            playPhaseTick(player.w);
+            wSoundTimer = 1;
+          }
+        }
+      }
 
       if (keysDown["arrowleft"]) player.angle -= 2.4 * dt;
       if (keysDown["arrowright"]) player.angle += 2.4 * dt;
@@ -1197,7 +1258,7 @@
         const ns = (strafe / inputMag) * clampedMag;
         const vx = cos * nf - sin * ns;
         const vy = sin * nf + cos * ns;
-        moveWithSlide(player, vx * speed * dt, vy * speed * dt, 0.21, false);
+        moveWithSlide(player, vx * speed * dt, vy * speed * dt, 0.21, false, player.w);
 
         bobTimer += dt * (sprinting ? 14 : 9);
         footstepTimer -= dt * (sprinting ? 3.2 : 1.9);
@@ -1215,7 +1276,7 @@
       }
 
       sprites.forEach(sp => {
-        if (!sp.taken && Math.hypot(player.x - sp.x, player.y - sp.y) < 0.65) {
+        if (!sp.taken && getPhaseVisibility(sp.w, player.w) > 0.25 && Math.hypot(player.x - sp.x, player.y - sp.y) < 0.65) {
           sp.taken = true;
           if (sp.type === "key") {
             keysCollected++;
@@ -1248,6 +1309,7 @@
       }
 
       const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
+      const wDiff = Math.abs(player.w - monster.w);
 
       if (monster.stunTimer > 0) {
         monster.stunTimer = Math.max(0, monster.stunTimer - dt);
@@ -1257,7 +1319,7 @@
         const los = hasLineOfSight(monster.x, monster.y, player.x, player.y);
         const detectRange = isHiding ? 1.15 : (player.flashlight ? 7.2 : (sprinting ? 4.5 : 2.3));
 
-        if (los && dist < detectRange) {
+        if (los && dist < detectRange && wDiff < 0.85) {
           if (!monster.chasing) playShriek();
           monster.chasing = true;
           monster.memoryTimer = 3.5 + sectorIndex * 0.35;
@@ -1270,22 +1332,29 @@
           }
         }
 
+        // Monster slowly drifts its W-phase toward player when chasing
+        if (monster.chasing) {
+          monster.w += Math.sign(player.w - monster.w) * Math.min(Math.abs(player.w - monster.w), 0.7 * dt);
+        } else {
+          monster.w = Math.sin(performance.now() * 0.0007 + sectorIndex) * 1.0;
+        }
+
         if (!monster.chasing && Math.hypot(monster.targetX - monster.x, monster.targetY - monster.y) < 0.5) {
           let rx, ry, tries = 0;
           do {
             rx = Math.floor(Math.random() * (mapGrid[0].length - 2)) + 1.5;
             ry = Math.floor(Math.random() * (mapGrid.length - 2)) + 1.5;
             tries++;
-          } while (isBlocked(rx, ry, false) && tries < 60);
+          } while (isBlocked(rx, ry, false, monster.w) && tries < 60);
           monster.targetX = rx;
           monster.targetY = ry;
         }
 
         const mSpd = monster.chasing ? monster.chaseSpeed : monster.patrolSpeed;
         const mAng = Math.atan2(monster.targetY - monster.y, monster.targetX - monster.x);
-        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2, true);
+        moveWithSlide(monster, Math.cos(mAng) * mSpd * dt, Math.sin(mAng) * mSpd * dt, 0.2, true, monster.w);
 
-        if (dist < 6.8 || monster.chasing) {
+        if ((dist < 6.8 && wDiff < 0.9) || monster.chasing) {
           monsterStepTimer -= dt * (monster.chasing ? 4.4 : 1.9);
           if (monsterStepTimer <= 0) {
             const vol = Math.min(0.28, (6.8 / Math.max(1, dist)) * 0.14);
@@ -1302,7 +1371,7 @@
           statusUi.className = "";
         }
 
-        if (dist < 0.5) {
+        if (dist < 0.5 && wDiff < 0.45) {
           running = false;
           jumpscareTimer = 0.85;
           playJumpscare();
@@ -1327,10 +1396,10 @@
       rCtx.arc(cx, cy, radius, 0, Math.PI * 2);
       rCtx.clip();
 
-      rCtx.fillStyle = "rgba(6, 12, 9, 0.9)";
+      rCtx.fillStyle = "rgba(6, 12, 12, 0.92)";
       rCtx.fillRect(0, 0, rw, rh);
 
-      rCtx.strokeStyle = "rgba(34, 197, 94, 0.22)";
+      rCtx.strokeStyle = "rgba(45, 212, 191, 0.22)";
       rCtx.beginPath();
       rCtx.arc(cx, cy, radius * 0.5, 0, Math.PI * 2);
       rCtx.stroke();
@@ -1349,9 +1418,15 @@
 
       closets.forEach(cl => {
         if (cl.taken) return;
+        const vis = getPhaseVisibility(cl.w, player.w);
         const pt = toRadar(cl.x, cl.y);
-        rCtx.fillStyle = cl.opened && cl.loot === "key" ? "#facc15" : "rgba(192, 132, 252, 0.7)";
-        rCtx.fillRect(pt.x - 2.2, pt.y - 2.2, 4.4, 4.4);
+        if (vis > 0.15) {
+          rCtx.fillStyle = cl.opened && cl.loot === "key" ? "#facc15" : "#2dd4bf";
+          rCtx.fillRect(pt.x - 2.3, pt.y - 2.3, 4.6, 4.6);
+        } else {
+          rCtx.strokeStyle = "rgba(45, 212, 191, 0.35)";
+          rCtx.strokeRect(pt.x - 1.8, pt.y - 1.8, 3.6, 3.6);
+        }
       });
 
       for (let r = 0; r < mapGrid.length; r++) {
@@ -1365,9 +1440,10 @@
       }
 
       const mDist = Math.hypot(monster.x - player.x, monster.y - player.y);
-      if (mDist < 7.5 || monster.chasing) {
+      const wDiff = Math.abs(player.w - monster.w);
+      if ((mDist < 7.5 && wDiff < 0.9) || monster.chasing) {
         const mPt = toRadar(monster.x, monster.y);
-        rCtx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : "#ef4444";
+        rCtx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : (wDiff < 0.5 ? "#ef4444" : "rgba(239,68,68,0.45)");
         rCtx.beginPath();
         rCtx.arc(mPt.x, mPt.y, 3.8, 0, Math.PI * 2);
         rCtx.fill();
@@ -1396,7 +1472,7 @@
         ctx.arc(W / 2 + shakeX, H / 2 + shakeY, 190, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = "#fef08a";
+        ctx.fillStyle = "#2dd4bf";
         ctx.beginPath();
         ctx.arc(W / 2 - 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
         ctx.arc(W / 2 + 65 + shakeX, H / 2 - 35 + shakeY, 26, 0, Math.PI * 2);
@@ -1415,14 +1491,14 @@
         : 0;
 
       const roofGrad = ctx.createLinearGradient(0, 0, 0, horizonY);
-      roofGrad.addColorStop(0, flicker > 0 ? "#181c24" : "#08090d");
+      roofGrad.addColorStop(0, flicker > 0 ? "#132226" : "#08090d");
       roofGrad.addColorStop(1, "#030305");
       ctx.fillStyle = roofGrad;
       ctx.fillRect(0, 0, W, horizonY);
 
       const floorGrad = ctx.createLinearGradient(0, horizonY, 0, H);
       floorGrad.addColorStop(0, "#040406");
-      floorGrad.addColorStop(1, flicker > 0 ? "#1b2029" : "#090a0e");
+      floorGrad.addColorStop(1, flicker > 0 ? "#16262b" : "#090a0e");
       ctx.fillStyle = floorGrad;
       ctx.fillRect(0, horizonY, W, H - horizonY);
 
@@ -1525,6 +1601,12 @@
             i * stripW, drawStart, stripW + 0.6, lineHeight
           );
 
+          // Subtle 4D W-phase tint along wall trim
+          if (Math.abs(player.w) > 0.2) {
+            ctx.fillStyle = player.w > 0 ? "rgba(45, 212, 191, 0.07)" : "rgba(192, 132, 252, 0.07)";
+            ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
+          }
+
           const darkness = Math.max(0, Math.min(0.97, 1 - light * 1.18));
           ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
           ctx.fillRect(i * stripW, drawStart, stripW + 0.6, lineHeight);
@@ -1532,12 +1614,23 @@
       }
 
       const renderList = [];
-      closets.forEach(cl => renderList.push({ x: cl.x, y: cl.y, kind: "closet", data: cl }));
-      props.forEach(pr => renderList.push({ x: pr.x, y: pr.y, kind: "prop", data: pr }));
-      sprites.forEach(sp => {
-        if (!sp.taken) renderList.push({ x: sp.x, y: sp.y, kind: sp.type });
+      closets.forEach(cl => {
+        const vis = getPhaseVisibility(cl.w, player.w);
+        if (vis > 0.05) renderList.push({ x: cl.x, y: cl.y, kind: "closet", data: cl, phaseVis: vis });
       });
-      renderList.push({ x: monster.x, y: monster.y, kind: "monster" });
+      props.forEach(pr => {
+        const vis = getPhaseVisibility(pr.w, player.w);
+        if (vis > 0.05) renderList.push({ x: pr.x, y: pr.y, kind: "prop", data: pr, phaseVis: vis });
+      });
+      sprites.forEach(sp => {
+        const vis = getPhaseVisibility(sp.w, player.w);
+        if (!sp.taken && vis > 0.1) renderList.push({ x: sp.x, y: sp.y, kind: sp.type, phaseVis: vis });
+      });
+
+      const mPhaseVis = getPhaseVisibility(monster.w, player.w);
+      if (mPhaseVis > 0.1 || monster.chasing || Math.hypot(monster.x - player.x, monster.y - player.y) < 3.5) {
+        renderList.push({ x: monster.x, y: monster.y, kind: "monster", phaseVis: Math.max(0.25, mPhaseVis) });
+      }
 
       renderList.sort((a, b) => {
         const da = (player.x - a.x) ** 2 + (player.y - a.y) ** 2;
@@ -1566,6 +1659,9 @@
         const centerFocus = Math.max(0, 1 - Math.abs(normScreen) * 2.1);
         const light = Math.min(1, flicker * centerFocus * Math.max(0, 1 - transformY / 7.5) + Math.max(0, 0.25 - transformY * 0.08));
 
+        ctx.save();
+        ctx.globalAlpha = Math.min(1, obj.phaseVis ?? 1);
+
         if (obj.kind === "closet") {
           const cl = obj.data;
           const cW = spriteSize * 0.62;
@@ -1575,7 +1671,7 @@
 
           ctx.fillStyle = "#2b1d14";
           ctx.fillRect(leftX, topY, cW, cH);
-          ctx.strokeStyle = "#140d09";
+          ctx.strokeStyle = cl.w > 0 ? "#2dd4bf" : "#c084fc";
           ctx.lineWidth = 2;
           ctx.strokeRect(leftX, topY, cW, cH);
 
@@ -1654,7 +1750,7 @@
           const eyeY = topY + mH * 0.22;
           const eyeSpread = mW * 0.18;
           const eyeR = Math.max(2, spriteSize * 0.032);
-          ctx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : (monster.chasing ? "#ef4444" : "#fef08a");
+          ctx.fillStyle = monster.stunTimer > 0 ? "#38bdf8" : (monster.chasing ? "#ef4444" : "#2dd4bf");
           ctx.beginPath();
           ctx.arc(screenX - eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
           ctx.arc(screenX + eyeSpread, eyeY, eyeR, 0, Math.PI * 2);
@@ -1667,7 +1763,18 @@
           ctx.arc(screenX, itemY, itemR, 0, Math.PI * 2);
           ctx.fill();
         }
+
+        ctx.restore();
       });
+
+      // 4D W-Axis Gauge Bar on Left Edge
+      const barH = 120;
+      const barTop = H / 2 - barH / 2;
+      ctx.fillStyle = "rgba(10, 14, 18, 0.75)";
+      ctx.fillRect(14, barTop, 8, barH);
+      const markerY = barTop + ((1 - player.w) * 0.5) * barH;
+      ctx.fillStyle = "#2dd4bf";
+      ctx.fillRect(11, markerY - 3, 14, 6);
 
       if (isHiding) {
         ctx.fillStyle = "rgba(8, 6, 5, 0.42)";
@@ -1684,7 +1791,7 @@
         ctx.stroke();
       }
 
-      if (monster.chasing && monster.stunTimer <= 0) {
+      if (monster.chasing && monster.stunTimer <= 0 && Math.abs(player.w - monster.w) < 0.85) {
         const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
         const pulse = 0.25 + Math.max(0, (5 - dist) / 5) * 0.35;
         const grad = ctx.createRadialGradient(W / 2, H / 2, W * 0.25, W / 2, H / 2, W * 0.65);
