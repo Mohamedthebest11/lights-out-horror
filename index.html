@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>LIGHTS OUT 4D // Furnished Quarters & Mobile</title>
+  <title>LIGHTS OUT 4D // Realistic Rooms &amp; Fixed Doors</title>
   <style>
     * {
       box-sizing: border-box;
@@ -321,7 +321,7 @@
     <canvas id="game" width="900" height="540"></canvas>
     <div id="room-banner">MAIN CORRIDOR // ALPHA-W</div>
     <button id="touch-toggle" type="button">TOUCH UI</button>
-    <div id="prompt">[R / CLICK] OPEN CLOSET</div>
+    <div id="prompt">[R / CLICK] OPEN DOOR</div>
     <div id="toast">4D PHASE SHIFTED</div>
     <canvas id="radar" width="112" height="112"></canvas>
     <div id="crosshair"></div>
@@ -344,7 +344,7 @@
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT 4D</h1>
       <p id="ov-desc">
-        Explore furnished <b>Kitchens</b>, <b>Bedrooms</b>, <b>Bathrooms</b>, and <b>Laundry Rooms</b> across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br><br>
+        Explore detailed <b>Kitchens</b>, <b>Bedrooms</b>, <b>Bathrooms</b>, and <b>Laundry Rooms</b> across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br><br>
         <b>Mobile:</b> Left joystick to move, drag right screen to look, use <b>W - / W +</b> to shift 4D phase.<br>
         <b>PC:</b> WASD move, Mouse look, <b>Z / X</b> shift 4D phase, R/Click interact, F light, E pulse.
       </p>
@@ -673,11 +673,13 @@
       g.fillStyle = upper;
       g.fillRect(0, 0, TEX_SIZE, 320);
 
+      // Wall molding / wainscot rail
       g.fillStyle = "#1c1714";
-      g.fillRect(0, 316, TEX_SIZE, 14);
-      g.fillStyle = "rgba(255,255,255,0.08)";
-      g.fillRect(0, 316, TEX_SIZE, 2);
+      g.fillRect(0, 314, TEX_SIZE, 16);
+      g.fillStyle = "rgba(255,255,255,0.09)";
+      g.fillRect(0, 314, TEX_SIZE, 2);
 
+      // Lower wainscoting panels
       const wood = g.createLinearGradient(0, 330, 0, TEX_SIZE);
       wood.addColorStop(0, "#38261b");
       wood.addColorStop(1, "#1f140e");
@@ -688,6 +690,8 @@
       for (let x = 64; x < TEX_SIZE; x += 64) {
         g.fillRect(x, 332, 2, TEX_SIZE - 332);
       }
+      g.strokeStyle = "rgba(255,255,255,0.05)";
+      g.strokeRect(20, 346, TEX_SIZE - 40, TEX_SIZE - 366);
     });
 
     const doorTex = createTextureCanvas(g => {
@@ -748,20 +752,24 @@
           { x: 19.2, y: 10.5, w: -1.0, loot: "key", opened: false, taken: false }
         ],
         props: [
-          // Kitchen: Island counter, stove, fridge
+          // Kitchen: Island counter, stove, fridge, upper cabinets
           { x: 3.8, y: 3.3, w: -1.0, kind: "island" },
           { x: 2.0, y: 3.8, w: -1.0, kind: "stove" },
           { x: 5.5, y: 2.0, w: -1.0, kind: "fridge" },
-          // Bathroom: Vanity sink, mirror, bathtub
+          { x: 3.5, y: 1.4, w: -1.0, kind: "upperCabinet" },
+          // Bathroom: Vanity sink + mirror, tub, towel rack
           { x: 17.8, y: 2.0, w: 1.0, kind: "sink" },
           { x: 18.8, y: 4.2, w: 1.0, kind: "tub" },
-          // Bedroom: Bed + nightstand
+          { x: 16.0, y: 4.2, w: 1.0, kind: "towelBar" },
+          // Bedroom: Bed + nightstand + dresser
           { x: 3.5, y: 10.5, w: -0.9, kind: "bed" },
           { x: 5.2, y: 9.8, w: -0.9, kind: "nightstand" },
-          // Laundry Room: Washer, dryer, folding rack
+          { x: 2.0, y: 9.8, w: -0.9, kind: "dresser" },
+          // Laundry Room: Washer, dryer, folding rack, detergent shelf
           { x: 17.5, y: 10.2, w: 0.9, kind: "washer" },
           { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" },
-          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" }
+          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" },
+          { x: 18.2, y: 12.4, w: 0.9, kind: "detergentShelf" }
         ],
         looseItems: [
           { x: 11.0, y: 7.5, w: 0.0, type: "battery", taken: false }
@@ -810,12 +818,16 @@
         props: [
           { x: 3.6, y: 3.2, w: -1.0, kind: "bed" },
           { x: 5.3, y: 2.4, w: -1.0, kind: "nightstand" },
+          { x: 2.0, y: 4.2, w: -1.0, kind: "dresser" },
           { x: 17.8, y: 3.3, w: 1.0, kind: "island" },
           { x: 19.0, y: 2.0, w: 1.0, kind: "fridge" },
+          { x: 16.2, y: 3.8, w: 1.0, kind: "stove" },
           { x: 3.5, y: 10.5, w: -0.9, kind: "tub" },
           { x: 2.0, y: 9.8, w: -0.9, kind: "sink" },
+          { x: 5.2, y: 11.8, w: -0.9, kind: "towelBar" },
           { x: 17.6, y: 10.2, w: 0.9, kind: "washer" },
-          { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" }
+          { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" },
+          { x: 16.4, y: 12.2, w: 0.9, kind: "detergentShelf" }
         ],
         looseItems: [
           { x: 3.5, y: 7.0, w: 0.0, type: "battery", taken: false },
@@ -866,13 +878,17 @@
           { x: 3.6, y: 3.3, w: -1.0, kind: "island" },
           { x: 2.0, y: 3.8, w: -1.0, kind: "stove" },
           { x: 5.5, y: 2.0, w: -1.0, kind: "fridge" },
+          { x: 3.5, y: 1.4, w: -1.0, kind: "upperCabinet" },
           { x: 17.8, y: 2.0, w: 1.0, kind: "sink" },
           { x: 18.8, y: 4.2, w: 1.0, kind: "tub" },
+          { x: 16.0, y: 4.2, w: 1.0, kind: "towelBar" },
           { x: 3.6, y: 10.5, w: -0.9, kind: "bed" },
           { x: 5.2, y: 9.8, w: -0.9, kind: "nightstand" },
+          { x: 2.0, y: 12.0, w: -0.9, kind: "dresser" },
           { x: 17.6, y: 10.2, w: 0.9, kind: "washer" },
           { x: 18.8, y: 10.2, w: 0.9, kind: "dryer" },
-          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" }
+          { x: 16.4, y: 9.8, w: 0.9, kind: "rack" },
+          { x: 18.2, y: 12.4, w: 0.9, kind: "detergentShelf" }
         ],
         looseItems: [
           { x: 11.0, y: 7.0, w: 0.0, type: "battery", taken: false },
@@ -924,7 +940,8 @@
       for (let r = 0; r < mapGrid.length; r++) {
         for (let c = 0; c < mapGrid[0].length; c++) {
           if (mapGrid[r][c] === 3) {
-            doorStates[`${c},${r}`] = { open: false, progress: 0 };
+            // progress is clamped to [0, 0.85] so a door jamb remains and never freezes collision/raycast
+            doorStates[`${c},${r}`] = { open: false, progress: 0, cooldown: 0 };
           }
         }
       }
@@ -1018,9 +1035,9 @@
         const dx = cl.x - player.x;
         const dy = cl.y - player.y;
         const dist = Math.hypot(dx, dy);
-        if (dist < 1.7) {
+        if (dist < 1.75) {
           const dot = (dx / dist) * cos + (dy / dist) * sin;
-          if (dot > 0.74) {
+          if (dot > 0.72) {
             if (!cl.opened) return { type: "closet", obj: cl, label: "OPEN CABINET / CLOSET" };
             if (!cl.taken && cl.loot !== "empty") {
               const itemName = cl.loot === "key" ? "TAKE SECURITY KEY" : "TAKE BATTERY";
@@ -1033,11 +1050,12 @@
         }
       }
 
-      for (let step = 0.65; step <= 1.7; step += 0.25) {
+      for (let step = 0.55; step <= 1.85; step += 0.2) {
         const tx = Math.floor(player.x + cos * step);
         const ty = Math.floor(player.y + sin * step);
         if (mapGrid[ty] && mapGrid[ty][tx] === 3) {
           const dState = doorStates[`${tx},${ty}`];
+          if (!dState) continue;
           if (Math.floor(player.x) === tx && Math.floor(player.y) === ty) return null;
           return {
             type: "door",
@@ -1057,7 +1075,9 @@
 
       if (activeInteraction.type === "door") {
         const st = activeInteraction.state;
+        if (st.cooldown > 0) return;
         st.open = !st.open;
+        st.cooldown = 0.28;
         playDoorSound(st.open);
         showToast(st.open ? "ROOM DOOR OPENED" : "ROOM DOOR CLOSED");
       } else if (activeInteraction.type === "closet") {
@@ -1128,6 +1148,7 @@
         if (dState && !dState.open) {
           if (isMonster && monster.chasing) {
             dState.open = true;
+            dState.cooldown = 0.3;
             playDoorSound(true);
             return false;
           }
@@ -1135,10 +1156,10 @@
         }
       }
       for (const cl of closets) {
-        if (getPhaseVisibility(cl.w, checkW) > 0.15 && Math.hypot(x - cl.x, y - cl.y) < 0.34) return true;
+        if (getPhaseVisibility(cl.w, checkW) > 0.15 && Math.hypot(x - cl.x, y - cl.y) < 0.32) return true;
       }
       for (const pr of props) {
-        if (getPhaseVisibility(pr.w, checkW) > 0.15 && Math.hypot(x - pr.x, y - pr.y) < 0.34) return true;
+        if (getPhaseVisibility(pr.w, checkW) > 0.15 && Math.hypot(x - pr.x, y - pr.y) < 0.32) return true;
       }
       return false;
     }
@@ -1163,7 +1184,7 @@
         const cy = Math.floor(y1 + (y2 - y1) * t);
         const cell = mapGrid[cy] && mapGrid[cy][cx];
         if (cell === 1 || cell === 4) return false;
-        if (cell === 3 && !doorStates[`${cx},${cy}`].open) return false;
+        if (cell === 3 && doorStates[`${cx},${cy}`] && !doorStates[`${cx},${cy}`].open) return false;
       }
       return true;
     }
@@ -1221,8 +1242,10 @@
 
       for (const key in doorStates) {
         const d = doorStates[key];
-        const target = d.open ? 1 : 0;
-        d.progress += (target - d.progress) * Math.min(1, dt * 9);
+        if (d.cooldown > 0) d.cooldown = Math.max(0, d.cooldown - dt);
+        const target = d.open ? 0.85 : 0;
+        d.progress += (target - d.progress) * Math.min(1, dt * 11);
+        if (Math.abs(d.progress - target) < 0.005) d.progress = target;
       }
 
       if (player.pulseCooldown > 0) player.pulseCooldown = Math.max(0, player.pulseCooldown - dt);
@@ -1483,23 +1506,19 @@
       const baseY = H / 2 + spriteSize * 0.16 + bobOffset;
 
       if (pr.kind === "bed") {
-        const bW = spriteSize * 0.76;
+        const bW = spriteSize * 0.78;
         const bH = spriteSize * 0.38;
         const leftX = screenX - bW / 2;
         const topY = baseY - bH * 0.42;
 
-        // Wooden headboard
         ctx.fillStyle = "#3b2416";
-        ctx.fillRect(leftX, topY - bH * 0.38, bW, bH * 0.42);
-        // Mattress & duvet
+        ctx.fillRect(leftX, topY - bH * 0.42, bW, bH * 0.46);
         ctx.fillStyle = "#4b3222";
         ctx.fillRect(leftX, topY, bW, bH);
         ctx.fillStyle = "#cbd5e1";
-        ctx.fillRect(leftX + 3, topY + 2, bW - 6, bH * 0.72);
-        // Blanket stripe
-        ctx.fillStyle = "#64748b";
-        ctx.fillRect(leftX + 3, topY + bH * 0.45, bW - 6, bH * 0.16);
-        // Pillows
+        ctx.fillRect(leftX + 3, topY + 2, bW - 6, bH * 0.74);
+        ctx.fillStyle = "#475569";
+        ctx.fillRect(leftX + 3, topY + bH * 0.46, bW - 6, bH * 0.18);
         ctx.fillStyle = "#f8fafc";
         ctx.fillRect(leftX + bW * 0.12, topY + 4, bW * 0.28, bH * 0.24);
         ctx.fillRect(leftX + bW * 0.58, topY + 4, bW * 0.28, bH * 0.24);
@@ -1510,26 +1529,48 @@
         const topY = baseY - nH * 0.55;
         ctx.fillStyle = "#4a3020";
         ctx.fillRect(leftX, topY, nW, nH);
-        // Lamp
         ctx.fillStyle = "#f59e0b";
         ctx.beginPath();
-        ctx.arc(screenX, topY - nH * 0.16, Math.max(2, nW * 0.22), 0, Math.PI * 2);
+        ctx.arc(screenX, topY - nH * 0.18, Math.max(2, nW * 0.24), 0, Math.PI * 2);
         ctx.fill();
+      } else if (pr.kind === "dresser") {
+        const drW = spriteSize * 0.58;
+        const drH = spriteSize * 0.42;
+        const leftX = screenX - drW / 2;
+        const topY = baseY - drH * 0.52;
+        ctx.fillStyle = "#3f2819";
+        ctx.fillRect(leftX, topY, drW, drH);
+        ctx.strokeStyle = "#78350f";
+        ctx.lineWidth = 1.5;
+        for (let row = 0; row < 3; row++) {
+          const dy = topY + 4 + row * (drH * 0.3);
+          ctx.strokeRect(leftX + 5, dy, drW - 10, drH * 0.24);
+          ctx.fillStyle = "#eab308";
+          ctx.fillRect(screenX - 4, dy + drH * 0.1, 8, 3);
+        }
       } else if (pr.kind === "island") {
-        const iW = spriteSize * 0.74;
+        const iW = spriteSize * 0.76;
         const iH = spriteSize * 0.36;
         const leftX = screenX - iW / 2;
         const topY = baseY - iH * 0.45;
-        // Granite countertop
         ctx.fillStyle = "#52525b";
         ctx.fillRect(leftX - 2, topY, iW + 4, iH * 0.22);
-        // Cabinet base
         ctx.fillStyle = "#d4d4d8";
         ctx.fillRect(leftX, topY + iH * 0.22, iW, iH * 0.78);
         ctx.strokeStyle = "#71717a";
         ctx.lineWidth = 1.5;
         ctx.strokeRect(leftX + 4, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
         ctx.strokeRect(screenX + 2, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
+      } else if (pr.kind === "upperCabinet") {
+        const uW = spriteSize * 0.62;
+        const uH = spriteSize * 0.24;
+        const leftX = screenX - uW / 2;
+        const topY = baseY - spriteSize * 0.88;
+        ctx.fillStyle = "#a1a1aa";
+        ctx.fillRect(leftX, topY, uW, uH);
+        ctx.strokeStyle = "#3f3f46";
+        ctx.strokeRect(leftX, topY, uW / 2, uH);
+        ctx.strokeRect(screenX, topY, uW / 2, uH);
       } else if (pr.kind === "stove") {
         const sW = spriteSize * 0.56;
         const sH = spriteSize * 0.46;
@@ -1546,21 +1587,20 @@
         ctx.arc(leftX + sW * 0.72, topY + sH * 0.16, Math.max(2, sW * 0.07), 0, Math.PI * 2);
         ctx.fill();
       } else if (pr.kind === "fridge") {
-        const fW = spriteSize * 0.44;
-        const fH = spriteSize * 0.78;
+        const fW = spriteSize * 0.46;
+        const fH = spriteSize * 0.82;
         const leftX = screenX - fW / 2;
-        const topY = baseY - fH * 0.82;
+        const topY = baseY - fH * 0.85;
         ctx.fillStyle = "#cbd5e1";
         ctx.fillRect(leftX, topY, fW, fH);
         ctx.strokeStyle = "#475569";
         ctx.lineWidth = 2;
         ctx.strokeRect(leftX, topY, fW, fH);
-        // Freezer line & handle
         ctx.beginPath();
         ctx.moveTo(leftX, topY + fH * 0.3);
         ctx.lineTo(leftX + fW, topY + fH * 0.3);
         ctx.stroke();
-        ctx.fillStyle = "#94a3b8";
+        ctx.fillStyle = "#64748b";
         ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.12, 3, fH * 0.12);
         ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.38, 3, fH * 0.18);
       } else if (pr.kind === "sink") {
@@ -1569,24 +1609,36 @@
         const leftX = screenX - vW / 2;
         const topY = baseY - vH * 0.45;
 
-        // Wall mirror above sink
         ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(leftX + vW * 0.15, topY - vH * 0.75, vW * 0.7, vH * 0.55);
-        // Vanity & basin
+        ctx.fillRect(leftX + vW * 0.15, topY - vH * 0.78, vW * 0.7, vH * 0.58);
+        ctx.strokeStyle = "#e2e8f0";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(leftX + vW * 0.15, topY - vH * 0.78, vW * 0.7, vH * 0.58);
         ctx.fillStyle = "#f1f5f9";
         ctx.fillRect(leftX, topY, vW, vH * 0.32);
         ctx.fillStyle = "#64748b";
         ctx.fillRect(leftX + 3, topY + vH * 0.32, vW - 6, vH * 0.68);
       } else if (pr.kind === "tub") {
-        const tW = spriteSize * 0.74;
-        const tH = spriteSize * 0.36;
+        const tW = spriteSize * 0.76;
+        const tH = spriteSize * 0.38;
         const leftX = screenX - tW / 2;
         const topY = baseY - tH * 0.42;
 
         ctx.fillStyle = "#f8fafc";
         ctx.fillRect(leftX, topY, tW, tH);
         ctx.fillStyle = "#0ea5e9";
-        ctx.fillRect(leftX + 5, topY + 4, tW - 10, tH * 0.45);
+        ctx.fillRect(leftX + 5, topY + 4, tW - 10, tH * 0.48);
+      } else if (pr.kind === "towelBar") {
+        const tbW = spriteSize * 0.34;
+        const tbH = spriteSize * 0.24;
+        const leftX = screenX - tbW / 2;
+        const topY = baseY - tbH * 0.7;
+        ctx.fillStyle = "#94a3b8";
+        ctx.fillRect(leftX, topY, tbW, 3);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(leftX + tbW * 0.2, topY + 3, tbW * 0.24, tbH * 0.75);
+        ctx.fillStyle = "#f472b6";
+        ctx.fillRect(leftX + tbW * 0.55, topY + 3, tbW * 0.24, tbH * 0.65);
       } else if (pr.kind === "dryer") {
         const dBox = spriteSize * 0.42;
         const leftX = screenX - dBox / 2;
@@ -1601,7 +1653,7 @@
         ctx.arc(screenX, topY + dBox * 0.56, Math.max(3, dBox * 0.24), 0, Math.PI * 2);
         ctx.fill();
       } else if (pr.kind === "rack") {
-        const rW = spriteSize * 0.5;
+        const rW = spriteSize * 0.52;
         const rH = spriteSize * 0.55;
         const leftX = screenX - rW / 2;
         const topY = baseY - rH * 0.65;
@@ -1610,8 +1662,18 @@
         ctx.fillRect(leftX, topY + rH * 0.45, rW, 5);
         ctx.fillStyle = "#e2e8f0";
         ctx.fillRect(leftX + 6, topY - 6, rW * 0.35, 6);
+      } else if (pr.kind === "detergentShelf") {
+        const dsW = spriteSize * 0.46;
+        const dsH = spriteSize * 0.22;
+        const leftX = screenX - dsW / 2;
+        const topY = baseY - spriteSize * 0.72;
+        ctx.fillStyle = "#cbd5e1";
+        ctx.fillRect(leftX, topY, dsW, 4);
+        ctx.fillStyle = "#38bdf8";
+        ctx.fillRect(leftX + 6, topY - dsH * 0.45, dsW * 0.2, dsH * 0.45);
+        ctx.fillStyle = "#facc15";
+        ctx.fillRect(leftX + dsW * 0.4, topY - dsH * 0.38, dsW * 0.18, dsH * 0.38);
       } else {
-        // Washing machine
         const wBox = spriteSize * 0.42;
         const leftX = screenX - wBox / 2;
         const topY = baseY - wBox * 0.52;
@@ -1688,7 +1750,6 @@
       ctx.fillStyle = floorGrad;
       ctx.fillRect(0, horizonY, W, H - horizonY);
 
-      // Floor grid lines for room realism
       if (horizonY < H - 4) {
         ctx.strokeStyle = "rgba(255, 255, 255, 0.045)";
         ctx.lineWidth = 1;
@@ -1765,7 +1826,7 @@
             const distToDoor = side === 0 ? (sideDistX - deltaDistX) : (sideDistY - deltaDistY);
             let wx = side === 0 ? player.y + distToDoor * rayDirY : player.x + distToDoor * rayDirX;
             wx -= Math.floor(wx);
-            if (wx >= dState.progress) {
+            if (dState && wx >= dState.progress) {
               hit = 3;
               perpDist = distToDoor;
               wallX = wx - dState.progress;
@@ -1911,7 +1972,7 @@
           renderProp3D(obj.data, screenX, spriteSize, bobOffset, H);
           const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
           ctx.fillStyle = `rgba(4, 4, 7, ${darkness})`;
-          ctx.fillRect(screenX - spriteSize * 0.45, H / 2 - spriteSize * 0.35 + bobOffset, spriteSize * 0.9, spriteSize * 0.85);
+          ctx.fillRect(screenX - spriteSize * 0.45, H / 2 - spriteSize * 0.45 + bobOffset, spriteSize * 0.9, spriteSize * 0.95);
 
         } else if (obj.kind === "monster") {
           const mW = spriteSize * 0.55;
