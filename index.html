@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-  <title>LIGHTS OUT 4D // Ultra Graphics Edition</title>
+  <title>LIGHTS OUT 4D // Fullscreen &amp; 3D Objects Edition</title>
   <style>
     * {
       box-sizing: border-box;
@@ -13,19 +13,27 @@
       -webkit-user-select: none;
       -webkit-tap-highlight-color: transparent;
     }
-    body {
+    html, body {
+      width: 100%;
+      height: 100%;
       background: radial-gradient(circle at center, #090b10 0%, #020204 100%);
       color: #e4e4e7;
       font-family: 'Courier New', Courier, monospace;
+      overflow: hidden;
+      touch-action: none;
+    }
+    body {
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100vh;
-      min-height: 100dvh;
-      overflow: hidden;
       padding: 6px;
-      touch-action: none;
+    }
+    body.touch-mode {
+      padding: 0;
+      width: 100dvw;
+      height: 100dvh;
+      justify-content: flex-start;
     }
     #hud {
       width: min(920px, 100%);
@@ -42,6 +50,17 @@
       font-size: clamp(0.68rem, 1.9vw, 0.86rem);
       letter-spacing: 0.6px;
       box-shadow: 0 -4px 24px rgba(0, 0, 0, 0.6);
+      z-index: 10;
+    }
+    body.touch-mode #hud {
+      width: 100%;
+      border-radius: 0;
+      border-left: none;
+      border-right: none;
+      border-top: none;
+      padding: 5px 10px;
+      gap: 4px 8px;
+      font-size: 0.64rem;
     }
     .danger { color: #f87171; font-weight: bold; text-shadow: 0 0 8px rgba(239, 68, 68, 0.5); }
     .good { color: #4ade80; text-shadow: 0 0 6px rgba(34, 197, 94, 0.35); }
@@ -61,6 +80,17 @@
       box-shadow: 0 18px 65px rgba(0, 0, 0, 0.98), 0 0 30px rgba(45, 212, 191, 0.08);
       overflow: hidden;
       background: #000;
+    }
+    body.touch-mode #wrap {
+      width: 100vw;
+      height: calc(100dvh - 28px);
+      max-width: none;
+      max-height: none;
+      aspect-ratio: auto;
+      border: none;
+      border-radius: 0;
+      box-shadow: none;
+      flex: 1;
     }
     canvas#game {
       display: block;
@@ -121,15 +151,15 @@
     }
     #room-banner {
       position: absolute;
-      top: 12px;
-      left: 14px;
+      top: 10px;
+      left: 12px;
       background: rgba(10, 12, 18, 0.82);
       backdrop-filter: blur(4px);
       border-left: 3px solid #2dd4bf;
-      padding: 5px 11px;
-      font-size: clamp(0.68rem, 1.9vw, 0.82rem);
+      padding: 4px 10px;
+      font-size: clamp(0.64rem, 1.8vw, 0.8rem);
       color: #f4f4f5;
-      letter-spacing: 1.2px;
+      letter-spacing: 1.1px;
       border-radius: 0 4px 4px 0;
       pointer-events: none;
       z-index: 5;
@@ -141,9 +171,9 @@
       background: rgba(16, 18, 26, 0.88);
       color: #a1a1aa;
       border: 1px solid rgba(255, 255, 255, 0.2);
-      padding: 5px 10px;
+      padding: 4px 9px;
       font-family: inherit;
-      font-size: 0.7rem;
+      font-size: 0.66rem;
       letter-spacing: 1px;
       cursor: pointer;
       z-index: 8;
@@ -168,14 +198,14 @@
       z-index: 5;
     }
     body.touch-mode #radar {
-      top: 38px;
+      top: 36px;
       bottom: auto;
       right: 10px;
-      width: 68px;
-      height: 68px;
+      width: 62px;
+      height: 62px;
     }
 
-    /* --- Mobile Touch Controls (Compact for Better View) --- */
+    /* --- Compact Mobile Touch Controls --- */
     #mobile-controls {
       position: absolute;
       inset: 0;
@@ -190,10 +220,10 @@
       position: absolute;
       left: 14px;
       bottom: 14px;
-      width: 92px;
-      height: 92px;
+      width: 88px;
+      height: 88px;
       border-radius: 50%;
-      background: rgba(20, 24, 34, 0.45);
+      background: rgba(20, 24, 34, 0.42);
       border: 1.5px solid rgba(255, 255, 255, 0.22);
       box-shadow: inset 0 0 14px rgba(0, 0, 0, 0.65);
       pointer-events: auto;
@@ -202,10 +232,10 @@
       position: absolute;
       left: 50%;
       top: 50%;
-      width: 36px;
-      height: 36px;
-      margin-left: -18px;
-      margin-top: -18px;
+      width: 34px;
+      height: 34px;
+      margin-left: -17px;
+      margin-top: -17px;
       border-radius: 50%;
       background: radial-gradient(circle at 35% 35%, rgba(255, 255, 255, 0.9), rgba(148, 163, 184, 0.5));
       border: 1px solid rgba(255, 255, 255, 0.75);
@@ -217,19 +247,19 @@
       right: 12px;
       bottom: 12px;
       display: grid;
-      grid-template-columns: repeat(3, 42px);
-      gap: 5px;
+      grid-template-columns: repeat(3, 40px);
+      gap: 4px;
       pointer-events: auto;
     }
     .m-btn {
-      width: 42px;
-      height: 36px;
+      width: 40px;
+      height: 34px;
       border-radius: 7px;
       background: rgba(16, 18, 26, 0.72);
       border: 1px solid rgba(255, 255, 255, 0.24);
       color: #f4f4f5;
       font-family: inherit;
-      font-size: 0.54rem;
+      font-size: 0.52rem;
       font-weight: bold;
       letter-spacing: 0.2px;
       line-height: 1.05;
@@ -250,55 +280,7 @@
     #btn-pulse { border-color: rgba(56, 189, 248, 0.65); color: #7dd3fc; }
     .w-btn { border-color: rgba(45, 212, 191, 0.65); color: #5eead4; }
 
-    /* --- Landscape Mobile Layout Optimization --- */
-    @media (orientation: landscape) and (max-height: 540px) {
-      body {
-        padding: 2px 6px;
-      }
-      #hud {
-        padding: 4px 10px;
-        gap: 4px 8px;
-        font-size: 0.64rem;
-      }
-      #wrap {
-        width: auto;
-        height: calc(100dvh - 32px);
-        max-height: calc(100dvh - 32px);
-        max-width: calc(100vw - 12px);
-        aspect-ratio: 920 / 540;
-      }
-      body.touch-mode #joy-base {
-        width: 82px;
-        height: 82px;
-        left: 12px;
-        bottom: 10px;
-      }
-      body.touch-mode #joy-stick {
-        width: 32px;
-        height: 32px;
-        margin-left: -16px;
-        margin-top: -16px;
-      }
-      body.touch-mode #mobile-buttons {
-        grid-template-columns: repeat(3, 38px);
-        gap: 4px;
-        right: 10px;
-        bottom: 10px;
-      }
-      body.touch-mode .m-btn {
-        width: 38px;
-        height: 32px;
-        font-size: 0.5rem;
-      }
-      body.touch-mode #radar {
-        top: 34px;
-        right: 10px;
-        width: 56px;
-        height: 56px;
-      }
-    }
-
-    /* --- Stable Mobile & Desktop Overlay with Large Start Button --- */
+    /* --- Overlay & Large Green Start Button --- */
     #overlay {
       position: absolute;
       inset: 0;
@@ -319,27 +301,27 @@
       text-shadow: 0 0 22px rgba(45, 212, 191, 0.65);
     }
     #overlay p {
-      max-width: 640px;
+      max-width: 650px;
       line-height: 1.45;
       color: #cbd5e1;
       margin-bottom: 16px;
-      font-size: clamp(0.7rem, 2.4vw, 0.92rem);
+      font-size: clamp(0.7rem, 2.3vw, 0.9rem);
     }
     #start-btn {
       flex-shrink: 0;
-      min-width: min(320px, 82%);
+      min-width: min(330px, 84%);
       background: linear-gradient(180deg, #4ade80, #16a34a);
       color: #03150a;
       border: 2px solid #bbf7d0;
-      padding: 16px 36px;
+      padding: 16px 38px;
       font-family: inherit;
       font-weight: 900;
-      font-size: clamp(1rem, 4vw, 1.3rem);
+      font-size: clamp(1.05rem, 4.2vw, 1.35rem);
       letter-spacing: 2.5px;
       cursor: pointer;
       border-radius: 8px;
       touch-action: manipulation;
-      box-shadow: 0 0 32px rgba(74, 222, 128, 0.55);
+      box-shadow: 0 0 34px rgba(74, 222, 128, 0.6);
     }
     #start-btn:hover, #start-btn:active {
       filter: brightness(1.12);
@@ -377,7 +359,6 @@
     <canvas id="radar" width="116" height="116"></canvas>
     <div id="crosshair"></div>
 
-    <!-- Mobile Virtual Joystick & 4D Action Buttons -->
     <div id="mobile-controls">
       <div id="joy-base">
         <div id="joy-stick"></div>
@@ -395,9 +376,9 @@
     <div id="overlay">
       <h1 id="ov-title">LIGHTS OUT 4D</h1>
       <p id="ov-desc">
-        Explore detailed <b>Kitchens</b>, <b>Bedrooms</b>, <b>Bathrooms</b>, and <b>Laundry Rooms</b> across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br><br>
-        <b>Mobile:</b> Turn phone sideways for horizontal view, left stick to move, drag right screen to look, use <b>W - / W +</b> to shift 4D phase.<br>
-        <b>PC:</b> WASD move, Mouse look, <b>Z / X</b> shift 4D phase, R/Click interact, F light, E pulse.
+        Explore 3D rooms across a <b>4th dimension (W axis)</b> from <b>-1.00</b> to <b>+1.00</b>.<br>
+        <b>Two Endings:</b> Escape through the exit gate with keys, <i>or</i> fire a <b>PULSE</b> at <b>W ≥ +0.85</b> inside a room to trigger a <b>4D Core Overload</b> ending!<br><br>
+        <b>Mobile:</b> Turn sideways for horizontal play, left stick move, drag right look, <b>W - / W +</b> shift phase.
       </p>
       <button id="start-btn" type="button">START SECTOR 1</button>
     </div>
@@ -439,7 +420,7 @@
       }, 1700);
     }
 
-    // --- Mobile / Touch Detection, Landscape Lock & Toggle ---
+    // --- Fullscreen Mobile Detection, Landscape Lock & Toggle ---
     const isTouchDevice = ("ontouchstart" in window) || (navigator.maxTouchPoints > 0);
     if (isTouchDevice) {
       document.body.classList.add("touch-mode");
@@ -653,11 +634,14 @@
     function playSectorClear() {
       [330, 440, 554].forEach((f, idx) => setTimeout(() => playTone(f, "triangle", 0.25, 0.16), idx * 90));
     }
+    function playCoreOverloadSound() {
+      [220, 330, 494, 660, 880].forEach((f, idx) => setTimeout(() => playTone(f, "sawtooth", 0.35, 0.18), idx * 75));
+    }
     function playJumpscare() {
       [48, 55, 92, 138, 220, 440].forEach(f => playTone(f, "sawtooth", 1.1, 0.28));
     }
 
-    // --- High-Resolution PBR-Style Architectural Textures (512x512) ---
+    // --- Architectural Wall & Door Textures (512x512) ---
     const TEX_SIZE = 512;
 
     function createTextureCanvas(drawFn) {
@@ -1097,13 +1081,20 @@
       return `${rm ? rm.name : "MAIN CORRIDOR"} // ${phaseLabel}`;
     }
 
+    // --- Alternate Ending Trigger: 4D Core Overload (W >= +0.85 + Pulse inside a Room) ---
     function triggerPulse() {
       if (!running || player.pulseCooldown > 0) return;
       player.pulseCooldown = 10;
       pulseWaveTimer = 0.65;
       playPulseSound();
-      showToast("4D EMP PULSE FIRED!");
 
+      if (getCurrentRoom() && player.w >= 0.85) {
+        running = false;
+        pendingOverlayMode = "coreOverload";
+        return;
+      }
+
+      showToast("4D EMP PULSE FIRED!");
       const dist = Math.hypot(player.x - monster.x, player.y - monster.y);
       const wDiff = Math.abs(player.w - monster.w);
       if (dist < 6.8 && wDiff < 1.2) {
@@ -1288,7 +1279,14 @@
         try { document.exitPointerLock(); } catch (_) {}
       }
 
-      if (mode === "nextSector") {
+      if (mode === "coreOverload") {
+        playCoreOverloadSound();
+        ovTitle.textContent = "ENDING 2/2: 4D CORE OVERLOAD";
+        ovTitle.style.color = "#38bdf8";
+        ovDesc.innerHTML = `You detonated a <b>4D EMP Pulse</b> at <b>W ≥ +0.85</b> inside a room, collapsing the dimensional rift and trapping the 4D stalker in BETA-W!<br><br><b>Alternate Ending Unlocked!</b>`;
+        startBtn.textContent = "PLAY FULL RUN AGAIN";
+        startBtn.dataset.action = "restartAll";
+      } else if (mode === "nextSector") {
         playSectorClear();
         const nextIdx = sectorIndex + 1;
         ovTitle.textContent = `${SECTORS[sectorIndex].name} CLEARED`;
@@ -1298,15 +1296,15 @@
         startBtn.dataset.action = "nextSector";
       } else if (mode === "wonAll") {
         playSectorClear();
-        ovTitle.textContent = "4D FACILITY ESCAPED";
+        ovTitle.textContent = "ENDING 1/2: 4D FACILITY ESCAPED";
         ovTitle.style.color = "#4ade80";
-        ovDesc.innerHTML = "You searched every furnished room and escaped all 3 sectors.<br><br>Want to play another full run?";
+        ovDesc.innerHTML = "You collected every key and escaped all 3 sectors through the exit gate!<br><br><b>Classic Escape Ending Unlocked!</b>";
         startBtn.textContent = "PLAY FULL RUN AGAIN";
         startBtn.dataset.action = "restartAll";
       } else {
         ovTitle.textContent = "IT CAUGHT YOU";
         ovTitle.style.color = "#f87171";
-        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Shift <b>W</b> (Z/X or W-/W+) to slip into another 4D phase or hide in empty closets.`;
+        ovDesc.innerHTML = `You fell in <b>${SECTORS[sectorIndex].name}</b>.<br><br>Tip: Shift <b>W</b> to slip into another 4D phase, hide in empty closets, or fire <b>PULSE</b> at <b>W ≥ +0.85</b> inside a room for Ending 2.`;
         startBtn.textContent = `RETRY SECTOR ${sectorIndex + 1}`;
         startBtn.dataset.action = "retrySector";
       }
@@ -1602,227 +1600,153 @@
       rCtx.restore();
     }
 
-    function renderProp3D(pr, screenX, spriteSize, bobOffset, H) {
-      const baseY = H / 2 + spriteSize * 0.16 + bobOffset;
+    // --- True Perspective-Anchored 3D Furniture & Architectural Volumes ---
+    // Anchored cleanly to perspective floorY & ceilY (no floating 2D sprites)
+    function renderProp3D(pr, screenX, dist, bobOffset, H, light) {
+      const projH = Math.min(H * 3.2, H / Math.max(0.22, dist));
+      const floorY = H / 2 + projH * 0.5 + bobOffset;
+      const ceilY = H / 2 - projH * 0.5 + bobOffset;
+      const spanY = floorY - ceilY;
 
-      ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+      function yAt(hRatio) {
+        return floorY - hRatio * spanY;
+      }
+      function wAt(wRatio) {
+        return Math.max(3, projH * wRatio);
+      }
+      function shadeHex(hex, factor) {
+        const v = parseInt(hex.slice(1), 16);
+        const r = Math.min(255, Math.max(0, Math.round(((v >> 16) & 255) * factor)));
+        const g = Math.min(255, Math.max(0, Math.round(((v >> 8) & 255) * factor)));
+        const b = Math.min(255, Math.max(0, Math.round((v & 255) * factor)));
+        return `rgb(${r},${g},${b})`;
+      }
+
+      // Ground contact shadow on perspective floor
+      const shW = wAt(0.46);
+      const shH = Math.max(2, spanY * 0.045);
+      ctx.fillStyle = "rgba(0, 0, 0, 0.62)";
       ctx.beginPath();
-      ctx.ellipse(screenX, baseY + spriteSize * 0.04, spriteSize * 0.38, spriteSize * 0.08, 0, 0, Math.PI * 2);
+      ctx.ellipse(screenX, floorY + shH * 0.35, shW, shH, 0, 0, Math.PI * 2);
       ctx.fill();
 
-      if (pr.kind === "bed") {
-        const bW = spriteSize * 0.78;
-        const bH = spriteSize * 0.38;
-        const leftX = screenX - bW / 2;
-        const topY = baseY - bH * 0.42;
+      function draw3DBox(cx, hBot, hTop, widthRatio, depthRatio, faceHex, sideHex, topHex) {
+        const topPx = yAt(hTop);
+        const botPx = yAt(hBot);
+        const hPx = Math.max(2, botPx - topPx);
+        const wPx = wAt(widthRatio);
+        const dShift = wAt(depthRatio) * 0.35;
+        const lx = cx - wPx / 2;
 
-        const hbGrad = ctx.createLinearGradient(leftX, topY - bH * 0.42, leftX, topY);
-        hbGrad.addColorStop(0, "#4a2c18");
-        hbGrad.addColorStop(1, "#2a170c");
-        ctx.fillStyle = hbGrad;
-        ctx.fillRect(leftX, topY - bH * 0.42, bW, bH * 0.46);
-
-        ctx.fillStyle = "#3a2416";
-        ctx.fillRect(leftX, topY, bW, bH);
-        const duvet = ctx.createLinearGradient(leftX, topY, leftX, topY + bH * 0.75);
-        duvet.addColorStop(0, "#e2e8f0");
-        duvet.addColorStop(1, "#94a3b8");
-        ctx.fillStyle = duvet;
-        ctx.fillRect(leftX + 3, topY + 2, bW - 6, bH * 0.74);
-
-        ctx.fillStyle = "#334155";
-        ctx.fillRect(leftX + 3, topY + bH * 0.46, bW - 6, bH * 0.18);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillRect(leftX + bW * 0.12, topY + 4, bW * 0.28, bH * 0.24);
-        ctx.fillRect(leftX + bW * 0.58, topY + 4, bW * 0.28, bH * 0.24);
-      } else if (pr.kind === "nightstand") {
-        const nW = spriteSize * 0.28;
-        const nH = spriteSize * 0.28;
-        const leftX = screenX - nW / 2;
-        const topY = baseY - nH * 0.55;
-        ctx.fillStyle = "#4a3020";
-        ctx.fillRect(leftX, topY, nW, nH);
-        const lampGlow = ctx.createRadialGradient(screenX, topY - nH * 0.18, 1, screenX, topY - nH * 0.18, nW * 0.85);
-        lampGlow.addColorStop(0, "rgba(251, 191, 36, 0.85)");
-        lampGlow.addColorStop(1, "rgba(251, 191, 36, 0)");
-        ctx.fillStyle = lampGlow;
+        // Side depth volume
+        ctx.fillStyle = shadeHex(sideHex, 0.85);
         ctx.beginPath();
-        ctx.arc(screenX, topY - nH * 0.18, nW * 0.85, 0, Math.PI * 2);
+        ctx.moveTo(lx + wPx, topPx);
+        ctx.lineTo(lx + wPx + dShift, topPx - dShift * 0.55);
+        ctx.lineTo(lx + wPx + dShift, botPx - dShift * 0.55);
+        ctx.lineTo(lx + wPx, botPx);
+        ctx.closePath();
         ctx.fill();
-        ctx.fillStyle = "#fef08a";
+
+        // Top perspective face
+        if (topHex) {
+          ctx.fillStyle = shadeHex(topHex, 1.08);
+          ctx.beginPath();
+          ctx.moveTo(lx, topPx);
+          ctx.lineTo(lx + dShift, topPx - dShift * 0.55);
+          ctx.lineTo(lx + wPx + dShift, topPx - dShift * 0.55);
+          ctx.lineTo(lx + wPx, topPx);
+          ctx.closePath();
+          ctx.fill();
+        }
+
+        // Front face
+        ctx.fillStyle = faceHex;
+        ctx.fillRect(lx, topPx, wPx, hPx);
+        ctx.strokeStyle = "rgba(0,0,0,0.45)";
+        ctx.lineWidth = 1;
+        ctx.strokeRect(lx, topPx, wPx, hPx);
+        return { lx, topPx, botPx, wPx, hPx };
+      }
+
+      if (pr.kind === "bed") {
+        // Wooden headboard + frame + mattress + pillows
+        draw3DBox(screenX, 0.0, 0.58, 0.78, 0.14, "#4a2c18", "#2d1a0d", "#5e381f");
+        const m = draw3DBox(screenX, 0.06, 0.32, 0.76, 0.42, "#cbd5e1", "#94a3b8", "#f1f5f9");
+        ctx.fillStyle = "#334155";
+        ctx.fillRect(m.lx + 2, m.topPx + m.hPx * 0.48, m.wPx - 4, m.hPx * 0.24);
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(m.lx + m.wPx * 0.12, m.topPx + 2, m.wPx * 0.28, m.hPx * 0.32);
+        ctx.fillRect(m.lx + m.wPx * 0.60, m.topPx + 2, m.wPx * 0.28, m.hPx * 0.32);
+      } else if (pr.kind === "nightstand") {
+        const n = draw3DBox(screenX, 0.0, 0.30, 0.26, 0.22, "#4a3020", "#2c1b11", "#63412b");
+        draw3DBox(screenX, 0.30, 0.42, 0.12, 0.12, "#eab308", "#a16207", "#fef08a");
+        const g = ctx.createRadialGradient(screenX, yAt(0.42), 1, screenX, yAt(0.42), n.wPx * 0.9);
+        g.addColorStop(0, "rgba(251, 191, 36, 0.65)");
+        g.addColorStop(1, "rgba(251, 191, 36, 0)");
+        ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(screenX, topY - nH * 0.18, Math.max(2, nW * 0.22), 0, Math.PI * 2);
+        ctx.arc(screenX, yAt(0.42), n.wPx * 0.9, 0, Math.PI * 2);
         ctx.fill();
       } else if (pr.kind === "dresser") {
-        const drW = spriteSize * 0.58;
-        const drH = spriteSize * 0.42;
-        const leftX = screenX - drW / 2;
-        const topY = baseY - drH * 0.52;
-        const wGrad = ctx.createLinearGradient(leftX, topY, leftX, topY + drH);
-        wGrad.addColorStop(0, "#4a2f1d");
-        wGrad.addColorStop(1, "#29180e");
-        ctx.fillStyle = wGrad;
-        ctx.fillRect(leftX, topY, drW, drH);
-        ctx.strokeStyle = "#78350f";
-        ctx.lineWidth = 1.5;
-        for (let row = 0; row < 3; row++) {
-          const dy = topY + 4 + row * (drH * 0.3);
-          ctx.strokeRect(leftX + 5, dy, drW - 10, drH * 0.24);
-          ctx.fillStyle = "#facc15";
-          ctx.fillRect(screenX - 4, dy + drH * 0.1, 8, 3);
+        const dr = draw3DBox(screenX, 0.0, 0.46, 0.56, 0.24, "#4a2f1d", "#29180e", "#613e26");
+        ctx.strokeStyle = "#1c110a";
+        for (let r = 1; r <= 2; r++) {
+          const ly = dr.topPx + (dr.hPx / 3) * r;
+          ctx.beginPath();
+          ctx.moveTo(dr.lx + 2, ly);
+          ctx.lineTo(dr.lx + dr.wPx - 2, ly);
+          ctx.stroke();
         }
       } else if (pr.kind === "island") {
-        const iW = spriteSize * 0.76;
-        const iH = spriteSize * 0.36;
-        const leftX = screenX - iW / 2;
-        const topY = baseY - iH * 0.45;
-        const marble = ctx.createLinearGradient(leftX, topY, leftX + iW, topY);
-        marble.addColorStop(0, "#52525b");
-        marble.addColorStop(0.5, "#71717a");
-        marble.addColorStop(1, "#3f3f46");
-        ctx.fillStyle = marble;
-        ctx.fillRect(leftX - 2, topY, iW + 4, iH * 0.22);
-        ctx.fillStyle = "#e4e4e7";
-        ctx.fillRect(leftX, topY + iH * 0.22, iW, iH * 0.78);
-        ctx.strokeStyle = "#71717a";
-        ctx.lineWidth = 1.5;
-        ctx.strokeRect(leftX + 4, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
-        ctx.strokeRect(screenX + 2, topY + iH * 0.3, iW / 2 - 6, iH * 0.62);
+        draw3DBox(screenX, 0.0, 0.40, 0.74, 0.34, "#d4d4d8", "#71717a", "#a1a1aa");
+        draw3DBox(screenX, 0.40, 0.44, 0.78, 0.36, "#52525b", "#3f3f46", "#71717a");
       } else if (pr.kind === "upperCabinet") {
-        const uW = spriteSize * 0.62;
-        const uH = spriteSize * 0.24;
-        const leftX = screenX - uW / 2;
-        const topY = baseY - spriteSize * 0.88;
-        ctx.fillStyle = "#cbd5e1";
-        ctx.fillRect(leftX, topY, uW, uH);
-        ctx.strokeStyle = "#334155";
-        ctx.strokeRect(leftX, topY, uW / 2, uH);
-        ctx.strokeRect(screenX, topY, uW / 2, uH);
+        draw3DBox(screenX, 0.62, 0.88, 0.60, 0.22, "#cbd5e1", "#64748b", "#e2e8f0");
       } else if (pr.kind === "stove") {
-        const sW = spriteSize * 0.56;
-        const sH = spriteSize * 0.46;
-        const leftX = screenX - sW / 2;
-        const topY = baseY - sH * 0.5;
-        ctx.fillStyle = "#f4f4f5";
-        ctx.fillRect(leftX, topY, sW, sH);
+        const st = draw3DBox(screenX, 0.0, 0.44, 0.54, 0.30, "#e4e4e7", "#71717a", "#27272a");
         ctx.fillStyle = "#18181b";
-        ctx.fillRect(leftX + 4, topY + sH * 0.38, sW - 8, sH * 0.52);
+        ctx.fillRect(st.lx + 3, st.topPx + st.hPx * 0.35, st.wPx - 6, st.hPx * 0.52);
         ctx.fillStyle = "#f97316";
-        ctx.beginPath();
-        ctx.arc(leftX + sW * 0.28, topY + sH * 0.16, Math.max(2, sW * 0.07), 0, Math.PI * 2);
-        ctx.arc(leftX + sW * 0.72, topY + sH * 0.16, Math.max(2, sW * 0.07), 0, Math.PI * 2);
-        ctx.fill();
+        ctx.fillRect(st.lx + st.wPx * 0.18, st.topPx + 2, Math.max(3, st.wPx * 0.16), 3);
+        ctx.fillRect(st.lx + st.wPx * 0.66, st.topPx + 2, Math.max(3, st.wPx * 0.16), 3);
       } else if (pr.kind === "fridge") {
-        const fW = spriteSize * 0.46;
-        const fH = spriteSize * 0.82;
-        const leftX = screenX - fW / 2;
-        const topY = baseY - fH * 0.85;
-        const steel = ctx.createLinearGradient(leftX, topY, leftX + fW, topY);
-        steel.addColorStop(0, "#94a3b8");
-        steel.addColorStop(0.5, "#e2e8f0");
-        steel.addColorStop(1, "#64748b");
-        ctx.fillStyle = steel;
-        ctx.fillRect(leftX, topY, fW, fH);
+        const fr = draw3DBox(screenX, 0.0, 0.86, 0.46, 0.34, "#cbd5e1", "#64748b", "#e2e8f0");
         ctx.strokeStyle = "#334155";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(leftX, topY, fW, fH);
         ctx.beginPath();
-        ctx.moveTo(leftX, topY + fH * 0.3);
-        ctx.lineTo(leftX + fW, topY + fH * 0.3);
+        ctx.moveTo(fr.lx, fr.topPx + fr.hPx * 0.3);
+        ctx.lineTo(fr.lx + fr.wPx, fr.topPx + fr.hPx * 0.3);
         ctx.stroke();
-        ctx.fillStyle = "#475569";
-        ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.12, 3, fH * 0.12);
-        ctx.fillRect(leftX + fW * 0.76, topY + fH * 0.38, 3, fH * 0.18);
       } else if (pr.kind === "sink") {
-        const vW = spriteSize * 0.52;
-        const vH = spriteSize * 0.42;
-        const leftX = screenX - vW / 2;
-        const topY = baseY - vH * 0.45;
-        const mirror = ctx.createLinearGradient(leftX, topY - vH * 0.78, leftX + vW, topY);
-        mirror.addColorStop(0, "#7dd3fc");
-        mirror.addColorStop(0.5, "#e0f2fe");
-        mirror.addColorStop(1, "#0284c7");
-        ctx.fillStyle = mirror;
-        ctx.fillRect(leftX + vW * 0.15, topY - vH * 0.78, vW * 0.7, vH * 0.58);
-        ctx.strokeStyle = "#f8fafc";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(leftX + vW * 0.15, topY - vH * 0.78, vW * 0.7, vH * 0.58);
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillRect(leftX, topY, vW, vH * 0.32);
-        ctx.fillStyle = "#475569";
-        ctx.fillRect(leftX + 3, topY + vH * 0.32, vW - 6, vH * 0.68);
+        draw3DBox(screenX, 0.0, 0.38, 0.50, 0.26, "#e2e8f0", "#64748b", "#f8fafc");
+        draw3DBox(screenX, 0.46, 0.78, 0.42, 0.08, "#38bdf8", "#0284c7", "#bae6fd");
       } else if (pr.kind === "tub") {
-        const tW = spriteSize * 0.76;
-        const tH = spriteSize * 0.38;
-        const leftX = screenX - tW / 2;
-        const topY = baseY - tH * 0.42;
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillRect(leftX, topY, tW, tH);
-        const water = ctx.createLinearGradient(leftX, topY, leftX + tW, topY);
-        water.addColorStop(0, "#0284c7");
-        water.addColorStop(0.5, "#38bdf8");
-        water.addColorStop(1, "#0369a1");
-        ctx.fillStyle = water;
-        ctx.fillRect(leftX + 5, topY + 4, tW - 10, tH * 0.48);
+        const tb = draw3DBox(screenX, 0.0, 0.34, 0.76, 0.36, "#f1f5f9", "#94a3b8", "#ffffff");
+        ctx.fillStyle = "#0284c7";
+        ctx.fillRect(tb.lx + 3, tb.topPx + 2, tb.wPx - 6, Math.max(2, tb.hPx * 0.35));
       } else if (pr.kind === "towelBar") {
-        const tbW = spriteSize * 0.34;
-        const tbH = spriteSize * 0.24;
-        const leftX = screenX - tbW / 2;
-        const topY = baseY - tbH * 0.7;
-        ctx.fillStyle = "#cbd5e1";
-        ctx.fillRect(leftX, topY, tbW, 3);
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(leftX + tbW * 0.2, topY + 3, tbW * 0.24, tbH * 0.75);
-        ctx.fillStyle = "#f472b6";
-        ctx.fillRect(leftX + tbW * 0.55, topY + 3, tbW * 0.24, tbH * 0.65);
-      } else if (pr.kind === "dryer") {
-        const dBox = spriteSize * 0.42;
-        const leftX = screenX - dBox / 2;
-        const topY = baseY - dBox * 0.52;
-        ctx.fillStyle = "#e2e8f0";
-        ctx.fillRect(leftX, topY, dBox, dBox);
-        ctx.strokeStyle = "#475569";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(leftX, topY, dBox, dBox);
+        draw3DBox(screenX, 0.42, 0.64, 0.32, 0.14, "#38bdf8", "#0369a1", "#cbd5e1");
+      } else if (pr.kind === "dryer" || pr.kind === "washer") {
+        const isW = pr.kind === "washer";
+        const bx = draw3DBox(screenX, 0.0, 0.44, 0.42, 0.32, isW ? "#f8fafc" : "#e2e8f0", "#64748b", "#ffffff");
         ctx.fillStyle = "#0f172a";
         ctx.beginPath();
-        ctx.arc(screenX, topY + dBox * 0.56, Math.max(3, dBox * 0.24), 0, Math.PI * 2);
+        ctx.arc(screenX, bx.topPx + bx.hPx * 0.56, Math.max(2.5, bx.wPx * 0.22), 0, Math.PI * 2);
         ctx.fill();
+        ctx.strokeStyle = isW ? "#0284c7" : "#475569";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
       } else if (pr.kind === "rack") {
-        const rW = spriteSize * 0.52;
-        const rH = spriteSize * 0.55;
-        const leftX = screenX - rW / 2;
-        const topY = baseY - rH * 0.65;
-        ctx.fillStyle = "#78350f";
-        ctx.fillRect(leftX, topY, rW, 5);
-        ctx.fillRect(leftX, topY + rH * 0.45, rW, 5);
-        ctx.fillStyle = "#f1f5f9";
-        ctx.fillRect(leftX + 6, topY - 6, rW * 0.35, 6);
-      } else if (pr.kind === "detergentShelf") {
-        const dsW = spriteSize * 0.46;
-        const dsH = spriteSize * 0.22;
-        const leftX = screenX - dsW / 2;
-        const topY = baseY - spriteSize * 0.72;
-        ctx.fillStyle = "#cbd5e1";
-        ctx.fillRect(leftX, topY, dsW, 4);
-        ctx.fillStyle = "#38bdf8";
-        ctx.fillRect(leftX + 6, topY - dsH * 0.45, dsW * 0.2, dsH * 0.45);
-        ctx.fillStyle = "#facc15";
-        ctx.fillRect(leftX + dsW * 0.4, topY - dsH * 0.38, dsW * 0.18, dsH * 0.38);
+        draw3DBox(screenX, 0.35, 0.40, 0.52, 0.22, "#78350f", "#451a03", "#92400e");
+        draw3DBox(screenX, 0.58, 0.63, 0.52, 0.22, "#78350f", "#451a03", "#92400e");
       } else {
-        const wBox = spriteSize * 0.42;
-        const leftX = screenX - wBox / 2;
-        const topY = baseY - wBox * 0.52;
-        ctx.fillStyle = "#f8fafc";
-        ctx.fillRect(leftX, topY, wBox, wBox);
-        ctx.strokeStyle = "#475569";
-        ctx.lineWidth = 2;
-        ctx.strokeRect(leftX, topY, wBox, wBox);
-        ctx.fillStyle = "#0284c7";
-        ctx.beginPath();
-        ctx.arc(screenX, topY + wBox * 0.56, Math.max(3, wBox * 0.25), 0, Math.PI * 2);
-        ctx.fill();
+        draw3DBox(screenX, 0.58, 0.63, 0.46, 0.18, "#cbd5e1", "#64748b", "#e2e8f0");
+        draw3DBox(screenX - wAt(0.12), 0.63, 0.75, 0.10, 0.12, "#38bdf8", "#0284c7", "#7dd3fc");
       }
+
+      const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
+      ctx.fillStyle = `rgba(3, 4, 7, ${darkness})`;
+      ctx.fillRect(screenX - wAt(0.45), ceilY, wAt(0.9), spanY);
     }
 
     function render3D() {
@@ -2087,14 +2011,17 @@
 
         if (obj.kind === "closet") {
           const cl = obj.data;
-          const cW = spriteSize * 0.62;
-          const cH = spriteSize * 0.86;
+          const projH = Math.min(H * 3.1, H / transformY);
+          const floorY = H / 2 + projH * 0.5 + bobOffset;
+          const ceilY = H / 2 - projH * 0.5 + bobOffset;
+          const cW = Math.max(4, projH * 0.58);
+          const cH = Math.max(4, (floorY - ceilY) * 0.86);
           const leftX = screenX - cW / 2;
-          const topY = H / 2 - cH * 0.38 + bobOffset;
+          const topY = floorY - cH;
 
           ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
           ctx.beginPath();
-          ctx.ellipse(screenX, topY + cH, cW * 0.58, spriteSize * 0.07, 0, 0, Math.PI * 2);
+          ctx.ellipse(screenX, floorY + 2, cW * 0.56, Math.max(2, projH * 0.045), 0, 0, Math.PI * 2);
           ctx.fill();
 
           const cabGrad = ctx.createLinearGradient(leftX, topY, leftX + cW, topY);
@@ -2109,24 +2036,18 @@
 
           if (!cl.opened) {
             ctx.fillStyle = "#422c1e";
-            ctx.fillRect(leftX + 4, topY + 4, cW / 2 - 5, cH - 8);
-            ctx.fillRect(screenX + 1, topY + 4, cW / 2 - 5, cH - 8);
-
-            ctx.fillStyle = "rgba(0,0,0,0.45)";
-            for (let sy2 = topY + 14; sy2 < topY + cH * 0.35; sy2 += 6) {
-              ctx.fillRect(leftX + 10, sy2, cW / 2 - 16, 2);
-              ctx.fillRect(screenX + 7, sy2, cW / 2 - 16, 2);
-            }
+            ctx.fillRect(leftX + 3, topY + 3, cW / 2 - 4, cH - 6);
+            ctx.fillRect(screenX + 1, topY + 3, cW / 2 - 4, cH - 6);
 
             ctx.fillStyle = "#facc15";
-            ctx.fillRect(screenX - 6, topY + cH * 0.48, 3, 10);
-            ctx.fillRect(screenX + 3, topY + cH * 0.48, 3, 10);
+            ctx.fillRect(screenX - 5, topY + cH * 0.48, 2.5, 9);
+            ctx.fillRect(screenX + 2.5, topY + cH * 0.48, 2.5, 9);
           } else {
             ctx.fillStyle = "#090605";
-            ctx.fillRect(leftX + 6, topY + 6, cW - 12, cH - 12);
+            ctx.fillRect(leftX + 5, topY + 5, cW - 10, cH - 10);
 
             ctx.fillStyle = "#2b1d14";
-            ctx.fillRect(leftX + 6, topY + cH * 0.56, cW - 12, 4);
+            ctx.fillRect(leftX + 5, topY + cH * 0.56, cW - 10, 4);
 
             const doorLeafW = cW * 0.14;
             ctx.fillStyle = "#3a271b";
@@ -2156,10 +2077,7 @@
           ctx.fillRect(leftX - cW * 0.15, topY, cW * 1.3, cH);
 
         } else if (obj.kind === "prop") {
-          renderProp3D(obj.data, screenX, spriteSize, bobOffset, H);
-          const darkness = Math.max(0, Math.min(0.95, 1 - light * 1.15));
-          ctx.fillStyle = `rgba(3, 4, 7, ${darkness})`;
-          ctx.fillRect(screenX - spriteSize * 0.45, H / 2 - spriteSize * 0.45 + bobOffset, spriteSize * 0.9, spriteSize * 0.95);
+          renderProp3D(obj.data, screenX, transformY, bobOffset, H, light);
 
         } else if (obj.kind === "monster") {
           const mW = spriteSize * 0.56;
